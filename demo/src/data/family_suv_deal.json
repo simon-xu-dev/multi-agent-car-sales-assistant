@@ -1,0 +1,168 @@
+{
+  "id": "family_suv_deal",
+  "deal_id": "DEAL-2001",
+  "title": "二胎家庭 SUV 全链路成交：多渠道线索 -> 画像 -> 推荐 -> 试驾 -> 报价 -> 优惠审批 -> 订单草稿 -> 案例沉淀",
+  "customer": {
+    "name": "王女士",
+    "owner": "销售顾问-刘洋",
+    "store": "杭州滨江旗舰店",
+    "profile_hint": "30 岁左右，二胎家庭，家中有一辆旧轿车，预算 25-28 万，看重空间、安全和智能辅助驾驶，经常带娃自驾游。"
+  },
+  "session": {
+    "time": "09:40",
+    "channel": "website",
+    "text": "家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？",
+    "source": "官网在线咨询"
+  },
+  "sessions": [
+    {
+      "channel": "website",
+      "customer_id": "CUST-2001",
+      "time": "09:40",
+      "text": "家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？",
+      "owner": "官网在线咨询"
+    },
+    {
+      "channel": "wechat",
+      "customer_id": "CUST-2001",
+      "time": "10:05",
+      "text": "销售顾问：请问您对六座还是七座有要求？客户：五座以上都行，最好是六座，父母偶尔一起出门。",
+      "owner": "企业微信"
+    },
+    {
+      "channel": "phone",
+      "customer_id": "CUST-2001",
+      "time": "10:20",
+      "text": "电话转写：客户提到周末想去门店看实车，问试驾要不要预约。",
+      "owner": "电话转写"
+    }
+  ],
+  "lead": {
+    "lead_id": "LEAD-2001",
+    "stage": "new",
+    "source": "website+wechat+phone",
+    "score": 0.0,
+    "customer_id": "CUST-2001",
+    "created_at": "09:40",
+    "budget_hint": "25 万左右",
+    "family_hint": "二胎家庭，需大空间 SUV"
+  },
+  "customer_history": [
+    {
+      "time": "2025-06-10",
+      "event": "官网车型对比",
+      "detail": "对比过问界 M7 与理想 L7 的参数与口碑。"
+    },
+    {
+      "time": "2025-07-02",
+      "event": "门店到访",
+      "detail": "到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。"
+    }
+  ],
+  "models": [
+    {
+      "code": "L7",
+      "name": "理想 L7",
+      "category": "中大型增程 SUV",
+      "guide_price": 329800,
+      "subsidy": 8000,
+      "tags": ["六座", "增程", "家庭", "大空间", "安全"],
+      "stock": {"store_001": 3},
+      "specs": {"seats": "6", "range_km": 1100, "safety": "L2+ 智驾，9 气囊", "family_features": "后排娱乐屏、儿童座椅接口齐全"}
+    },
+    {
+      "code": "M7",
+      "name": "问界 M7",
+      "category": "中大型增程 SUV",
+      "guide_price": 249800,
+      "subsidy": 6000,
+      "tags": ["六座", "增程", "华为智驾", "安全"],
+      "stock": {"store_001": 2},
+      "specs": {"seats": "6", "range_km": 1050, "safety": "AEB 主动安全，华为 ADS", "family_features": "零重力座椅"}
+    },
+    {
+      "code": "TANG",
+      "name": "比亚迪唐 DM-i",
+      "category": "中大型插混 SUV",
+      "guide_price": 179800,
+      "subsidy": 5000,
+      "tags": ["七座", "插混", "性价比", "家用"],
+      "stock": {"store_001": 5},
+      "specs": {"seats": "7", "range_km": 1000, "safety": "刀片电池，6 气囊", "family_features": "性价比高，保养成本低"}
+    }
+  ],
+  "price_policy": {
+    "base_discount_pct": 0.8,
+    "authorized_max_discount_pct": 1.0,
+    "tiers": {"normal": 0.0, "silver": 0.2, "gold": 0.5},
+    "rule": "标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。"
+  },
+  "testdrive_slots": [
+    {"store_id": "store_001", "model_code": "L7", "slot": "2026-08-08 14:00"},
+    {"store_id": "store_001", "model_code": "L7", "slot": "2026-08-09 10:30"},
+    {"store_id": "store_001", "model_code": "M7", "slot": "2026-08-08 15:00"},
+    {"store_id": "store_001", "model_code": "TANG", "slot": "2026-08-08 16:00"}
+  ],
+  "knowledge": {
+    "products": [
+      {
+        "title": "理想 L7 产品知识",
+        "tags": ["L7", "理想", "增程", "六座"],
+        "summary": "中大型增程 SUV，六座布局，CLTC 综合续航 1100km，L2+ 智能驾驶，配备后排娱乐屏与双侧电动侧滑门。适合二胎家庭与多人出行。",
+        "match_terms": ["理想", "L7", "六座", "增程"]
+      },
+      {
+        "title": "问界 M7 产品知识",
+        "tags": ["M7", "问界", "增程", "华为智驾"],
+        "summary": "中大型增程 SUV，华为 ADS 高阶智驾，零重力座椅，主动安全表现优秀。",
+        "match_terms": ["问界", "M7", "华为", "智驾"]
+      },
+      {
+        "title": "比亚迪唐 DM-i 产品知识",
+        "tags": ["唐", "比亚迪", "插混"],
+        "summary": "中大型插混 SUV，刀片电池，七座可选，使用成本低，性价比高。",
+        "match_terms": ["唐", "比亚迪", "插混", "刀片电池"]
+      }
+    ],
+    "sops": [
+      {
+        "title": "家庭购车客户 SOP",
+        "tags": ["SOP", "家庭", "SUV", "试驾"],
+        "summary": "1) 先确认家庭结构与用车场景；2) 推荐 2-3 款候选并对比安全/空间配置；3) 主动安排试驾预约；4) 报价后说明补贴与优惠构成；5) 超授权优惠必须申请审批。",
+        "match_terms": ["SOP", "家庭", "试驾", "流程"]
+      },
+      {
+        "title": "新能源购车政策",
+        "tags": ["政策", "新能源", "补贴", "置换"],
+        "summary": "当前新能源车型享受购置税减免与厂家置换补贴，补贴额度以车型目录为准。",
+        "match_terms": ["政策", "补贴", "新能源"]
+      }
+    ],
+    "cases": [
+      {
+        "title": "2025-11 李女士家庭 SUV 成交案例",
+        "tags": ["成交", "家庭", "SUV", "理想L7"],
+        "summary": "二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安排试驾 + 展示安全配置对比 + 置换补贴测算。",
+        "match_terms": ["家庭", "SUV", "试驾", "成交", "置换"]
+      },
+      {
+        "title": "2025-08 赵先生预算敏感客户转化案例",
+        "tags": ["转化", "预算", "议价"],
+        "summary": "预算 18 万内客户，推荐比亚迪唐 DM-i，通过金融方案降低首付压力，最终成交。关键动作：金融方案前置测算。",
+        "match_terms": ["预算", "金融", "转化"]
+      }
+    ]
+  },
+  "finance": {
+    "products": [
+      {"name": "厂家低息金融", "annual_rate_pct": 2.99},
+      {"name": "合作银行分期", "annual_rate_pct": 3.99}
+    ]
+  },
+  "expected_outcome": {
+    "recommended_models": ["理想 L7", "问界 M7"],
+    "low_risk_auto": ["试驾预约（L1 自动执行）", "标准报价（L1）"],
+    "approval_required": ["超出 1% 授权的额外优惠（L2 审批任务）", "订单创建（L2 合同草稿）"],
+    "final_report": "影响面 / 画像 / 推荐 / 报价 / 试驾预约成功 / 优惠审批任务 / 订单草稿 / 待门店经理审批"
+  }
+}

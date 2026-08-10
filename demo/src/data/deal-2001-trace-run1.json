@@ -1,0 +1,184 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "time": "2026-08-04T10:47:51+0000",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"website\", \"customer_id\": \"CUST-2001\", \"owner\": \"官网在线咨询\", \"text\": \"家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？\", \"time\": \"09:40\"}, {\"channel\":..."
+    },
+    {
+      "time": "2026-08-04T10:55:53+0000",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"website\", \"customer_id\": \"CUST-2001\", \"owner\": \"官网在线咨询\", \"text\": \"家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？\", \"time\": \"09:40\"}, {\"channel\":..."
+    },
+    {
+      "time": "2026-08-04T10:55:57+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon..."
+    },
+    {
+      "time": "2026-08-04T10:56:00+0000",
+      "tool": "mock_wechat.get_session",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2001\", \"sessions\": [{\"channel\": \"wechat\", \"customer_id\": \"CUST-2001\", \"owner\": \"企业微信\", \"text\": \"销售顾问：请问您对六座还是七座有要求？客户：五座以上都行，最好是六座，父母偶尔一起出门。\", \"time\": \"10:..."
+    },
+    {
+      "time": "2026-08-04T10:56:03+0000",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "家庭 SUV 新能源 六座 试驾预约"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T10:56:27+0000",
+      "tool": "mock_crm.update_lead_stage",
+      "args": {
+        "lead_id": "LEAD-2001",
+        "stage": "qualified"
+      },
+      "result_preview": "{\"lead_id\": \"LEAD-2001\", \"message\": \"Lead stage updated to qualified.\", \"stage\": \"qualified\"}"
+    },
+    {
+      "time": "2026-08-04T10:59:04+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon..."
+    },
+    {
+      "time": "2026-08-04T10:59:07+0000",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "[{\"detail\": \"对比过问界 M7 与理想 L7 的参数与口碑。\", \"event\": \"官网车型对比\", \"time\": \"2025-06-10\"}, {\"detail\": \"到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。\", \"event\": \"门店到访\", \"time\": \"2025-07-02\"}]"
+    },
+    {
+      "time": "2026-08-04T10:59:10+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "二胎家庭 大空间 SUV 预算25万"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T10:59:12+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "family SUV deal"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T11:46:09+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": null
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安排试驾 + 展示安全配置对比 + 置..."
+    },
+    {
+      "time": "2026-08-04T11:46:15+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": null
+      },
+      "result_preview": "[{\"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\"], \"summary\": \"中大型增程 SUV，六座布局，CLTC 综合续航 1100km，L2+ 智能驾驶，配备后排娱乐屏与双侧电动侧滑门。适合二胎家庭与多人出行。\", \"tags\": [\"L7\", \"理想\", \"增程\", \"六座\"], \"title\": \"理想 L7 ..."
+    },
+    {
+      "time": "2026-08-04T11:46:19+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon..."
+    },
+    {
+      "time": "2026-08-04T12:04:11+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": "理想L7 家庭SUV 六座"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T12:04:21+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": "理想L7 问界M7 零跑C16 六座SUV"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T12:04:24+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": "SUV"
+      },
+      "result_preview": "[{\"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\"], \"summary\": \"中大型增程 SUV，六座布局，CLTC 综合续航 1100km，L2+ 智能驾驶，配备后排娱乐屏与双侧电动侧滑门。适合二胎家庭与多人出行。\", \"tags\": [\"L7\", \"理想\", \"增程\", \"六座\"], \"title\": \"理想 L7 ..."
+    },
+    {
+      "time": "2026-08-04T12:04:28+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": "零跑C16"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-04T12:04:31+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "理想L7 家庭 试驾 成交"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安排试驾 + 展示安全配置对比 + 置..."
+    },
+    {
+      "time": "2026-08-04T12:04:33+0000",
+      "tool": "mock_inventory.list_models",
+      "args": {},
+      "result_preview": "[{\"category\": \"中大型增程 SUV\", \"code\": \"L7\", \"guide_price\": 329800, \"name\": \"理想 L7\", \"specs\": {\"family_features\": \"后排娱乐屏、儿童座椅接口齐全\", \"range_km\": 1100, \"safety\": \"L2+ 智驾，9 气囊\", \"seats..."
+    },
+    {
+      "time": "2026-08-04T12:04:35+0000",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.8, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil..."
+    },
+    {
+      "time": "2026-08-04T12:04:38+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "gold"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 4287.4, \"customer_tier\": \"gold\", \"final_price\": 317512.6, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 L7..."
+    },
+    {
+      "time": "2026-08-04T12:04:41+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "M7",
+        "customer_tier": "gold"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 3247.4, \"customer_tier\": \"gold\", \"final_price\": 240552.6, \"guide_price\": 249800.0, \"model_code\": \"M7\", \"model_name\": \"问界 M7..."
+    },
+    {
+      "time": "2026-08-04T12:04:44+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon..."
+    }
+  ]
+}

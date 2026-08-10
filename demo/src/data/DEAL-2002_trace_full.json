@@ -1,0 +1,200 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "time": "2026-08-10T03:10:52+0000",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"douyin\", \"customer_id\": \"CUST-2002\", \"owner\": \"抖音私信\", \"text\": \"刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。\", \"time\": \"14:05\"}, {\"channel\": \"phone\", \"..."
+    },
+    {
+      "time": "2026-08-10T03:10:55+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "DEAL-2002"
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+    },
+    {
+      "time": "2026-08-10T03:11:10+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": null
+      },
+      "result_preview": "[{\"match_terms\": [\"秦\", \"比亚迪\", \"插混\", \"首购\"], \"summary\": \"紧凑型插混轿车，综合续航 1150km，亏电油耗低，落地价 12-14 万，首购人群热门选择。\", \"tags\": [\"秦PLUS\", \"比亚迪\", \"插混\"], \"title\": \"比亚迪秦PLUS DM-i 产品知识\"}, {\"match_..."
+    },
+    {
+      "time": "2026-08-10T03:11:13+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": null
+      },
+      "result_preview": "[{\"match_terms\": [\"首购\", \"金融\", \"月供\", \"成交\"], \"summary\": \"24 岁首购客户，预算 13 万。通过厂家低息方案（2.99%）将月供压到 2800 元以内，搭配 3 成首付，7 天成交秦PLUS。关键动作：金融方案前置 + 月供敏感点把控。\", \"tags\": [\"首购\", \"金融\", \"成交\"], \"t..."
+    },
+    {
+      "time": "2026-08-10T05:36:04+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "CUST-2002"
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+    },
+    {
+      "time": "2026-08-10T05:36:04+0000",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2002"
+      },
+      "result_preview": "[{\"detail\": \"在品牌直播间停留 20 分钟，咨询过秦PLUS 价格。\", \"event\": \"短视频互动\", \"time\": \"2025-05-20\"}]"
+    },
+    {
+      "time": "2026-08-10T05:36:04+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "首购分期购车 年轻人 低月供 预算12-15万"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-10T05:36:29+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+    },
+    {
+      "time": "2026-08-10T05:36:39+0000",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "首购客户 意图评估 跟进策略"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-10T05:59:55+0000",
+      "tool": "mock_inventory.list_models",
+      "args": {},
+      "result_preview": "[{\"category\": \"紧凑型插混轿车\", \"code\": \"QIN\", \"guide_price\": 129800, \"name\": \"比亚迪秦PLUS DM-i\", \"specs\": {\"family_features\": \"用车成本低，适合通勤\", \"fuel_cost\": \"百公里 3.8L 等效\", \"range_km\": 1150, ..."
+    },
+    {
+      "time": "2026-08-10T05:59:55+0000",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil..."
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "QIN",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 778.8, \"customer_tier\": \"normal\", \"final_price\": 125021.2, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚迪..."
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "SL03",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 899.4, \"customer_tier\": \"normal\", \"final_price\": 143000.6, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长安..."
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L6",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 718.8, \"customer_tier\": \"normal\", \"final_price\": 116081.2, \"guide_price\": 119800.0, \"model_code\": \"L6\", \"model_name\": \"吉利银河..."
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "QIN",
+        "store_id": "store_002"
+      },
+      "result_preview": "{\"available\": 8, \"enough_for_demo\": true, \"model_code\": \"QIN\", \"model_name\": \"比亚迪秦PLUS DM-i\", \"store_id\": \"store_002\"}"
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "SL03",
+        "store_id": "store_002"
+      },
+      "result_preview": "{\"available\": 4, \"enough_for_demo\": true, \"model_code\": \"SL03\", \"model_name\": \"长安深蓝 SL03\", \"store_id\": \"store_002\"}"
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "L6",
+        "store_id": "store_002"
+      },
+      "result_preview": "{\"available\": 6, \"enough_for_demo\": true, \"model_code\": \"L6\", \"model_name\": \"吉利银河 L6\", \"store_id\": \"store_002\"}"
+    },
+    {
+      "time": "2026-08-10T06:00:11+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "CUST-2002"
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+    },
+    {
+      "time": "2026-08-10T06:04:14+0000",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil..."
+    },
+    {
+      "time": "2026-08-10T06:04:17+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+    },
+    {
+      "time": "2026-08-10T06:04:24+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "QIN",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1038.4, \"customer_tier\": \"silver\", \"final_price\": 124761.6, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚..."
+    },
+    {
+      "time": "2026-08-10T06:04:27+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "SL03",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1199.2, \"customer_tier\": \"silver\", \"final_price\": 142700.8, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长..."
+    },
+    {
+      "time": "2026-08-10T06:04:30+0000",
+      "tool": "mock_finance.calc_plan",
+      "args": {
+        "price": 124761.6,
+        "down_payment": 18714.0,
+        "months": 60
+      },
+      "result_preview": "{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 18714.0, \"loan\": 106047.6, \"monthly_payment\": 1905.07, \"months\": 60, \"plan_id\": \"PLAN-BD7C9C\", \"product\": \"厂家低息金融\", \"total_i..."
+    },
+    {
+      "time": "2026-08-10T06:04:36+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L6",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 958.4, \"customer_tier\": \"silver\", \"final_price\": 115841.6, \"guide_price\": 119800.0, \"model_code\": \"L6\", \"model_name\": \"吉利银河..."
+    }
+  ]
+}

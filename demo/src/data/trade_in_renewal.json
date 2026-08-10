@@ -1,0 +1,162 @@
+{
+  "id": "trade_in_renewal",
+  "deal_id": "DEAL-2003",
+  "title": "老客户置换与售后运营闭环：企微回访 -> 历史画像 RAG -> 置换方案 -> 议价触底转人工 -> 售后关怀 -> 复购沉淀",
+  "customer": {
+    "name": "陈先生",
+    "owner": "客户运营专员-林悦",
+    "store": "广州天河店",
+    "profile_hint": "40 岁，本品牌 3 年老车主（2023 年购买秦PLUS），家庭换车需求，现有车辆需评估置换，价格敏感。"
+  },
+  "session": {
+    "time": "16:20",
+    "channel": "wechat",
+    "text": "你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另外我 3 月份车险到期了，之前的售后权益还能用吗？",
+    "source": "企业微信老客户回访"
+  },
+  "sessions": [
+    {
+      "channel": "wechat",
+      "customer_id": "CUST-2003",
+      "time": "16:20",
+      "text": "你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另外我 3 月份车险到期了，之前的售后权益还能用吗？",
+      "owner": "企业微信"
+    },
+    {
+      "channel": "store",
+      "customer_id": "CUST-2003",
+      "time": "16:45",
+      "text": "门店到店记录：陈先生到店看中大型 SUV，提出旧车置换 + 要求 3 万元额外优惠。",
+      "owner": "门店接待记录"
+    }
+  ],
+  "lead": {
+    "lead_id": "LEAD-2003",
+    "stage": "new",
+    "source": "wechat+store",
+    "score": 0.0,
+    "customer_id": "CUST-2003",
+    "created_at": "16:20",
+    "budget_hint": "置换购车，价格敏感",
+    "is_repeat_customer": true,
+    "loyalty_tier": "silver"
+  },
+  "customer_history": [
+    {
+      "time": "2023-04-15",
+      "event": "首次成交",
+      "detail": "购买比亚迪秦PLUS DM-i，成交价 12.3 万，走厂家低息金融，车险由本店投保。"
+    },
+    {
+      "time": "2024-06-20",
+      "event": "售后保养",
+      "detail": "2 万公里保养，售后满意度 9 分。"
+    },
+    {
+      "time": "2025-03-10",
+      "event": "续保",
+      "detail": "续保车险，投保金额 4600 元。"
+    },
+    {
+      "time": "2025-08-01",
+      "event": "车主活动",
+      "detail": "参加车主自驾游活动，家庭 4 人出席。"
+    }
+  ],
+  "models": [
+    {
+      "code": "TANG",
+      "name": "比亚迪唐 DM-i",
+      "category": "中大型插混 SUV",
+      "guide_price": 179800,
+      "subsidy": 5000,
+      "tags": ["七座", "插混", "家用", "置换"],
+      "stock": {"store_003": 4},
+      "specs": {"seats": "7", "range_km": 1000, "safety": "刀片电池，6 气囊", "family_features": "大空间，适合家庭升级"}
+    },
+    {
+      "code": "L6",
+      "name": "比亚迪海狮07",
+      "category": "中型纯电 SUV",
+      "guide_price": 189800,
+      "subsidy": 7000,
+      "tags": ["纯电", "SUV", "置换"],
+      "stock": {"store_003": 3},
+      "specs": {"seats": "5", "range_km": 610, "safety": "e平台3.0，刀片电池", "family_features": "年轻化升级选择"}
+    }
+  ],
+  "price_policy": {
+    "base_discount_pct": 0.8,
+    "authorized_max_discount_pct": 1.0,
+    "tiers": {"normal": 0.0, "silver": 0.2, "gold": 0.5},
+    "rule": "老客户 silver 等级享受 0.2% 额外优惠；置换补贴与旧车评估价以门店报价为准。额外优惠超过授权 1% 必须生成 L2 审批；议价若触及底线（总优惠超过 3.5% 或申请额超过 3 万），必须停止自动让步并转人工销售介入。"
+  },
+  "testdrive_slots": [
+    {"store_id": "store_003", "model_code": "TANG", "slot": "2026-08-09 15:00"},
+    {"store_id": "store_003", "model_code": "L6", "slot": "2026-08-10 11:00"}
+  ],
+  "knowledge": {
+    "products": [
+      {
+        "title": "比亚迪唐 DM-i 产品知识",
+        "tags": ["唐", "比亚迪", "插混", "置换"],
+        "summary": "中大型插混 SUV，刀片电池，七座可选，置换补贴力度大，适合老客户家庭升级。",
+        "match_terms": ["唐", "置换", "七座"]
+      },
+      {
+        "title": "比亚迪海狮07 产品知识",
+        "tags": ["海狮", "纯电"],
+        "summary": "中型纯电 SUV，e平台 3.0，年轻化设计，适合追求科技的置换客户。",
+        "match_terms": ["海狮", "纯电"]
+      }
+    ],
+    "sops": [
+      {
+        "title": "老客户置换 SOP",
+        "tags": ["SOP", "置换", "老客户", "评估"],
+        "summary": "1) 调取历史画像（购车记录/售后/续保）；2) 评估旧车价格与置换补贴；3) 提供置换方案对比；4) 老客户权益（续保、保养券）在方案中体现；5) 议价超出授权或触及底线时停止自动让步并转人工。",
+        "match_terms": ["SOP", "置换", "老客户", "评估"]
+      },
+      {
+        "title": "售后权益政策",
+        "tags": ["售后", "权益", "续保", "保养"],
+        "summary": "老客户续保享 9 折 + 全年免费洗车；3 年以上车主赠保养券；权益在置换购车时可折算。",
+        "match_terms": ["售后", "续保", "保养", "权益"]
+      }
+    ],
+    "cases": [
+      {
+        "title": "2025-07 孙先生老客户置换成交案例",
+        "tags": ["老客户", "置换", "成交"],
+        "summary": "4 年车龄老客户，旧车评估 10.8 万 + 置换补贴 1.2 万，通过售后权益折算（续保 9 折 + 保养券）锁定唐 DM-i，周期 3 天。关键动作：历史画像召回 + 置换补贴测算 + 售后权益打包。",
+        "match_terms": ["老客户", "置换", "成交", "权益"]
+      },
+      {
+        "title": "2025-05 议价触底转人工案例",
+        "tags": ["议价", "底线", "转人工"],
+        "summary": "客户坚持要求 4 万额外优惠，超出授权底线，Agent 停止让步并输出转人工建议，人工销售通过赠送延保权益达成成交。关键动作：底线守护 + 转人工衔接。",
+        "match_terms": ["议价", "底线", "转人工"]
+      }
+    ]
+  },
+  "finance": {
+    "products": [
+      {"name": "厂家低息金融", "annual_rate_pct": 2.99},
+      {"name": "合作银行分期", "annual_rate_pct": 3.99}
+    ]
+  },
+  "trade_in": {
+    "old_model": "比亚迪秦PLUS DM-i",
+    "purchase_year": 2023,
+    "mileage_km": 42000,
+    "assessment_offer": 98000,
+    "trade_in_subsidy": 12000,
+    "rule": "旧车评估价 9.8 万 + 置换补贴 1.2 万；客户提出 3 万额外优惠，超出授权且接近底线（3.5%），Agent 应停止自动让步并转人工销售。"
+  },
+  "expected_outcome": {
+    "recommended_models": ["比亚迪唐 DM-i"],
+    "low_risk_auto": ["历史画像召回（L0 RAG）", "置换方案测算（L0）", "售后权益模板消息（L1）"],
+    "approval_required": ["3 万额外优惠超授权（L2 审批任务）", "议价触及底线 -> 转人工销售"],
+    "final_report": "历史画像 / 置换方案 / 议价底线触发 / 转人工交接单 / 售后关怀已发送 / 复购线索状态更新"
+  }
+}
