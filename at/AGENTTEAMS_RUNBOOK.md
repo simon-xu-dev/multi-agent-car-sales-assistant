@@ -1,4 +1,4 @@
-# 使用 AgentTeams 运行 SalesFlow Demo
+# 使用 AgentTeams 运行 CarSales Demo
 
 这份手册面向第一次试运行 demo 的参赛者。运行机器可以是本地 Mac、Linux 服务器或云主机；mock 工具网关和 AgentTeams 都部署在同一台机器上。
 
@@ -156,7 +156,7 @@ http://172.18.0.1:18089
 1. 所有 Worker 使用 `qwenpow`（`copow`/`QwenPaw`）运行时。
 2. `manager` 必须逐个创建 Worker，不能并行创建。
 3. 必须确认前一个 Worker 创建成功且正常运行后，再创建下一个 Worker。
-4. 创建 Team 时必须生成新的独立 Worker `salesflow-demo-leader` 作为 TeamLeader，不能把 8 个业务 Worker 中的任何一个直接指定为 leader。
+4. 创建 Team 时必须生成新的独立 Worker `carsales-demo-leader` 作为 TeamLeader，不能把 8 个业务 Worker 中的任何一个直接指定为 leader。
 
 Worker 初始化会拉起运行时并写入依赖，低规格机器上并发创建可能造成高 I/O 消耗甚至阻塞。因此不要手动把 Worker 创建任务拆开并并行发送。
 
@@ -172,7 +172,7 @@ Worker 初始化会拉起运行时并写入依赖，低规格机器上并发创�
 
 打开 [run_demo_task_message.md](run_demo_task_message.md)。
 
-在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `salesflow-demo` 的 Team 房间。通常 `manager` 在创建完成摘要里会告诉你 Team 房间名称和 `team_leader_name`。
+在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `carsales-demo` 的 Team 房间。通常 `manager` 在创建完成摘要里会告诉你 Team 房间名称和 `team_leader_name`。
 
 进入 Team 房间后，在输入框先输入并选中 leader mention：
 
@@ -185,7 +185,7 @@ Worker 初始化会拉起运行时并写入依赖，低规格机器上并发创�
 如果你只看到 `manager` 房间，可以先问：
 
 ```text
-salesflow-demo 对应的 Team 房间在哪里？请告诉我 Matrix 会话列表中名称以 Team 开头的房间名称，以及需要 @ 的 team_leader_name。
+carsales-demo 对应的 Team 房间在哪里？请告诉我 Matrix 会话列表中名称以 Team 开头的房间名称，以及需要 @ 的 team_leader_name。
 ```
 
 任务消息只包含客户咨询、deal_id 和 scenario_id。车型目录、库存、政策、知识库、试驾档期应由 Agent 通过 HTTP 工具网关主动查询。

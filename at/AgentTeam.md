@@ -1,4 +1,4 @@
-# SalesFlow Demo AgentTeam
+# CarSales Demo AgentTeam
 
 这个文件描述 demo 使用的 Team 形态。主运行路径是 AgentTeams + 真实 LLM Worker + HTTP mock 工具网关。
 
@@ -8,10 +8,10 @@
 | --- | --- |
 | Manager 房间 | 接收自包含的 Agent 创建消息 |
 | Team 房间 | Matrix 会话列表中名称以 `Team` 开头；用户通过 `@<team_leader_name>` 发送销售任务 |
-| TeamLeader Worker | 创建 Team 时由 manager 生成的独立 Worker `salesflow-demo-leader` |
+| TeamLeader Worker | 创建 Team 时由 manager 生成的独立 Worker `carsales-demo-leader` |
 | Worker 房间 | 运行 8 个角色明确的业务 LLM Agent |
 | Worker 运行时 | 统一使用 `qwenpow`（`copow`/`QwenPaw`） |
-| 创建策略 | `manager` 串行创建 8 个业务 Worker；创建 Team 时再生成独立 TeamLeader Worker `salesflow-demo-leader`；禁止把业务 Worker 指定为 leader |
+| 创建策略 | `manager` 串行创建 8 个业务 Worker；创建 Team 时再生成独立 TeamLeader Worker `carsales-demo-leader`；禁止把业务 Worker 指定为 leader |
 | AgentSpec | 8 个业务 Worker 内联在 `at/create_agents_messages.md` |
 | 任务输入 | `at/run_demo_task_message.md` 中的客户咨询与 deal_id/scenario_id |
 | 工具调用 | HTTP mock 工具网关（8 个企业系统 mock + 验证探针） |
@@ -22,7 +22,7 @@ AgentTeams 组件经常运行在 Docker 中，因此运行时不依赖宿主机�
 
 ## 工作流
 
-1. TeamLeader `salesflow-demo-leader` 接收 Team 房间中的销售任务，提取 `deal_id`、`scenario_id` 与客户咨询，按需调度业务 Worker。
+1. TeamLeader `carsales-demo-leader` 接收 Team 房间中的销售任务，提取 `deal_id`、`scenario_id` 与客户咨询，按需调度业务 Worker。
 2. `Lead Intake Agent` 归并多渠道会话、去重分级，输出统一线索。
 3. `Profile Builder Agent` 构建客户画像（预算、家庭、场景、偏好）并标注置信度。
 4. `Intent Analyst Agent` 识别购车阶段与意向评分，确定跟进优先级。

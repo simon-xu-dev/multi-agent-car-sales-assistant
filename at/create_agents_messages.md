@@ -18,16 +18,16 @@ Content-Type: application/json
 ## 复制到 Manager 的完整创建请求
 
 ```text
-请为 SalesFlow Demo 创建 8 个业务 Worker 和 1 个 Team。创建 Team 时，必须由 manager 创建一个独立 Worker 作为 TeamLeader。以下内容是完整创建脚本，请严格按顺序执行，不要并行创建。
+请为 CarSales Demo 创建 8 个业务 Worker 和 1 个 Team。创建 Team 时，必须由 manager 创建一个独立 Worker 作为 TeamLeader。以下内容是完整创建脚本，请严格按顺序执行，不要并行创建。
 
 全局创建约束：
 1. 所有 Worker 必须使用 qwenpow（copow；安装器或界面中也可能显示为 QwenPaw）运行时创建，并使用 AgentTeams 当前配置的真实 LLM。
 2. 必须逐个创建 Worker，禁止并行创建多个 Worker。
 3. 业务 Worker 创建顺序必须是：lead-intake -> profile-builder -> intent-analyst -> strategy-planner -> negotiation-executor -> order-executor -> customer-ops -> knowledge-miner。
 4. 每创建完成一个 Worker 后，必须确认该 Worker 创建成功且可以正常运行，再创建下一个 Worker。
-5. 创建 salesflow-demo Team 时，必须创建一个新的独立 Worker 作为 TeamLeader，名称必须是 salesflow-demo-leader。
+5. 创建 carsales-demo Team 时，必须创建一个新的独立 Worker 作为 TeamLeader，名称必须是 carsales-demo-leader。
 6. 禁止把 8 个业务 Worker 中的任何一个直接指定为 leader。
-7. 必须等 8 个业务 Worker 全部创建完成并确认正常运行后，才允许创建 salesflow-demo Team。
+7. 必须等 8 个业务 Worker 全部创建完成并确认正常运行后，才允许创建 carsales-demo Team。
 8. Worker 初始化可能拉起容器运行时并写入依赖；并行创建会造成高 I/O 消耗，低规格机器可能因此阻塞，所以不要为了提速而并行执行。
 9. 8 个业务 Worker 的 AgentSpec、Skill、工具契约都在本消息中内联，不依赖 Worker 读取宿主机目录中的文件。
 10. 所有工具数据都通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
@@ -42,7 +42,7 @@ Content-Type: application/json
 Step 1. 创建 Worker: lead-intake
 ============================================================
 
-请创建一个名为 lead-intake 的 Worker，作为 SalesFlow Demo 的 Lead Intake Agent（线索聚合 Agent）。
+请创建一个名为 lead-intake 的 Worker，作为 CarSales Demo 的 Lead Intake Agent（线索聚合 Agent）。
 
 业务约束：
 - 输入来自团队房间中的客户咨询、deal_id 和 scenario_id。
@@ -85,7 +85,7 @@ output contract:
 Step 2. 创建 Worker: profile-builder
 ============================================================
 
-请创建一个名为 profile-builder 的 Worker，作为 SalesFlow Demo 的 Profile Builder Agent（客户画像 Agent）。
+请创建一个名为 profile-builder 的 Worker，作为 CarSales Demo 的 Profile Builder Agent（客户画像 Agent）。
 
 业务约束：
 - 画像字段必须带证据与置信度，信息不足时输出 data_gaps，不允许无证据推断。
@@ -130,7 +130,7 @@ output contract:
 Step 3. 创建 Worker: intent-analyst
 ============================================================
 
-请创建一个名为 intent-analyst 的 Worker，作为 SalesFlow Demo 的 Intent Analyst Agent（购车意图识别 Agent）。
+请创建一个名为 intent-analyst 的 Worker，作为 CarSales Demo 的 Intent Analyst Agent（购车意图识别 Agent）。
 
 业务约束：
 - 评分必须有信号清单支撑，禁止只输出总分；低意向线索标记 nurture 而非放弃。
@@ -167,7 +167,7 @@ output contract:
 Step 4. 创建 Worker: strategy-planner
 ============================================================
 
-请创建一个名为 strategy-planner 的 Worker，作为 SalesFlow Demo 的 Strategy Planner Agent（销售策略生成 Agent）。
+请创建一个名为 strategy-planner 的 Worker，作为 CarSales Demo 的 Strategy Planner Agent（销售策略生成 Agent）。
 
 业务约束：
 - 推荐必须由画像 + 产品知识 + 库存共同支撑；报价严格执行政策授权；推荐理由必须引用 RAG 证据。
@@ -213,7 +213,7 @@ output contract:
 Step 5. 创建 Worker: negotiation-executor
 ============================================================
 
-请创建一个名为 negotiation-executor 的 Worker，作为 SalesFlow Demo 的 Negotiation Executor Agent（智能议价 Agent）。
+请创建一个名为 negotiation-executor 的 Worker，作为 CarSales Demo 的 Negotiation Executor Agent（智能议价 Agent）。
 
 业务约束：
 - 授权内优惠自动应用；超授权优惠生成 L2 审批任务；触及底线立即停止让步并输出转人工交接单。
@@ -260,7 +260,7 @@ output contract:
 Step 6. 创建 Worker: order-executor
 ============================================================
 
-请创建一个名为 order-executor 的 Worker，作为 SalesFlow Demo 的 Order Executor Agent（订单执行 Agent）。
+请创建一个名为 order-executor 的 Worker，作为 CarSales Demo 的 Order Executor Agent（订单执行 Agent）。
 
 业务约束：
 - 订单创建必须使用幂等键（order_key），禁止重复下单；审批通过前订单停留在草稿状态。
@@ -301,7 +301,7 @@ output contract:
 Step 7. 创建 Worker: customer-ops
 ============================================================
 
-请创建一个名为 customer-ops 的 Worker，作为 SalesFlow Demo 的 Customer Ops Agent（客户运营 Agent）。
+请创建一个名为 customer-ops 的 Worker，作为 CarSales Demo 的 Customer Ops Agent（客户运营 Agent）。
 
 业务约束：
 - 只使用标准模板消息触达客户（L1）；涉及优惠承诺或投诉处理必须转人工。
@@ -343,7 +343,7 @@ output contract:
 Step 8. 创建 Worker: knowledge-miner
 ============================================================
 
-请创建一个名为 knowledge-miner 的 Worker，作为 SalesFlow Demo 的 Knowledge Miner Agent（知识沉淀 Agent）。
+请创建一个名为 knowledge-miner 的 Worker，作为 CarSales Demo 的 Knowledge Miner Agent（知识沉淀 Agent）。
 
 业务约束：
 - 入库案例必须脱敏，禁止包含客户姓名、电话、完整地址。
@@ -381,7 +381,7 @@ output contract:
 完成 knowledge-miner 创建后，请确认 8 个业务 Worker 都创建成功且可正常运行，再继续 Step 9。
 
 ============================================================
-Step 9. 创建 Team: salesflow-demo
+Step 9. 创建 Team: carsales-demo
 ============================================================
 
 在确认以下 8 个业务 Worker 都创建成功且可正常运行后，再创建 Team：
@@ -394,10 +394,10 @@ Step 9. 创建 Team: salesflow-demo
 7. customer-ops
 8. knowledge-miner
 
-请创建一个名为 salesflow-demo 的 Team，包含以上 8 个业务 Worker。
+请创建一个名为 carsales-demo 的 Team，包含以上 8 个业务 Worker。
 
 Team 创建要求：
-- 创建 Team 时，必须创建一个新的独立 Worker 作为 TeamLeader，名称必须是 salesflow-demo-leader。
+- 创建 Team 时，必须创建一个新的独立 Worker 作为 TeamLeader，名称必须是 carsales-demo-leader。
 - 禁止把 8 个业务 Worker 中的任何一个直接指定为 leader。
 - 8 个业务 Worker 只作为被 TeamLeader 调度的专业角色参与 Team，不承担 TeamLeader 身份。
 
@@ -405,7 +405,7 @@ Team 创建要求：
 
 团队运行规则：
 - 使用 AgentTeams 当前配置的真实 LLM 完成推理和协作。
-- manager 只负责创建和管理；销售任务由 salesflow-demo 对应的 Team 房间接收，用户需要在消息开头 @<team_leader_name>，该 mention 应指向 salesflow-demo-leader。
+- manager 只负责创建和管理；销售任务由 carsales-demo 对应的 Team 房间接收，用户需要在消息开头 @<team_leader_name>，该 mention 应指向 carsales-demo-leader。
 - 8 个业务 Worker 的 AgentSpec、Skill、工具契约都已在本消息中内联，不依赖 Worker 读取宿主机文件。
 - 所有工具数据通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
 - 收到销售任务后，由 TeamLeader 按任务拆解调度业务 Worker（按需调用，不需要 8 个全部参与）：
@@ -423,10 +423,10 @@ Team 创建要求：
 
 全部创建完成后，请输出创建结果摘要，至少包含：
 - 8 个业务 Worker 的创建状态和运行时类型。
-- Team 创建时生成的独立 TeamLeader Worker 名称和运行时类型，必须单独列出 salesflow-demo-leader。
-- salesflow-demo Team 的创建状态。
-- TeamLeader 指定结果，必须显示 salesflow-demo-leader 是 TeamLeader。
-- Matrix 会话列表中名称以 Team 开头、对应 salesflow-demo 的 Team 房间名称或入口。
-- 需要在 Team 房间中 @ 的 team_leader_name，并说明它对应 salesflow-demo-leader。
+- Team 创建时生成的独立 TeamLeader Worker 名称和运行时类型，必须单独列出 carsales-demo-leader。
+- carsales-demo Team 的创建状态。
+- TeamLeader 指定结果，必须显示 carsales-demo-leader 是 TeamLeader。
+- Matrix 会话列表中名称以 Team 开头、对应 carsales-demo 的 Team 房间名称或入口。
+- 需要在 Team 房间中 @ 的 team_leader_name，并说明它对应 carsales-demo-leader。
 - 提醒用户后续销售任务必须进入 Team 房间后，通过 @<team_leader_name> 的消息发送，不要发送给 manager。
 ```

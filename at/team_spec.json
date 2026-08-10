@@ -1,6 +1,6 @@
 {
   "team": {
-    "name": "salesflow-demo",
+    "name": "carsales-demo",
     "version": "0.2.0",
     "description": "Multi-agent autonomous car-sales deal-closing demo for GOAI Agent Infra round.",
     "primary_runtime": "agentteams-real-llm",
@@ -18,18 +18,18 @@
         "knowledge_miner",
         "team"
       ],
-      "rule": "Create the next business Worker only after the previous Worker is created and verified healthy. During Team creation, manager must create salesflow-demo-leader as a dedicated TeamLeader Worker."
+      "rule": "Create the next business Worker only after the previous Worker is created and verified healthy. During Team creation, manager must create carsales-demo-leader as a dedicated TeamLeader Worker."
     },
     "team_leader": {
-      "id": "salesflow_demo_leader",
-      "name": "salesflow-demo-leader",
+      "id": "carsales_demo_leader",
+      "name": "carsales-demo-leader",
       "creation": "created by manager during Team creation",
       "rule": "Must be created as a new independent Worker and designated as TeamLeader. Do not designate any business Worker as leader."
     },
     "agent_spec_source": "inline messages in at/create_agents_messages.md",
     "deal_task_source": "three deal messages in at/run_demo_task_message.md",
     "task_submission_policy": {
-      "room": "Matrix room whose name starts with Team and matches salesflow-demo",
+      "room": "Matrix room whose name starts with Team and matches carsales-demo",
       "mention": "@<team_leader_name>",
       "rule": "Enter the Team room, mention the team leader, paste one deal task into that mention message, and wait for the report before submitting the next deal."
     },
@@ -106,7 +106,7 @@
     }
   ],
   "workflow": [
-    {"step": 1, "agent": "salesflow_demo_leader", "task": "receive_deal_task_extract_deal_id_scenario_id_and_dispatch"},
+    {"step": 1, "agent": "carsales_demo_leader", "task": "receive_deal_task_extract_deal_id_scenario_id_and_dispatch"},
     {"step": 2, "agent": "lead_intake", "task": "fuse_multi_channel_sessions_and_grade_lead"},
     {"step": 3, "agent": "profile_builder", "task": "build_customer_profile_with_confidence"},
     {"step": 4, "agent": "intent_analyst", "task": "score_intent_and_set_priority"},
@@ -115,7 +115,7 @@
     {"step": 7, "agent": "order_executor", "task": "create_order_draft_verify_deal"},
     {"step": 8, "agent": "customer_ops", "task": "after_sales_touch_and_revival_plan_if_applicable"},
     {"step": 9, "agent": "knowledge_miner", "task": "mine_and_save_deal_case"},
-    {"step": 10, "agent": "salesflow_demo_leader", "task": "compose_final_deal_report"}
+    {"step": 10, "agent": "carsales_demo_leader", "task": "compose_final_deal_report"}
   ],
   "risk_policy": {
     "auto_execute": ["L0", "L1"],

@@ -1,6 +1,6 @@
 # MCP Mapping Notes（工具集成契约）
 
-SalesFlow 初赛 demo 使用 HTTP mock tool gateway，让 AgentTeams 中的 Docker Worker 可以通过网络访问 mock CRM、库存、报价、金融、试驾、订单、知识库（RAG）和企业微信工具。
+CarSales 初赛 demo 使用 HTTP mock tool gateway，让 AgentTeams 中的 Docker Worker 可以通过网络访问 mock CRM、库存、报价、金融、试驾、订单、知识库（RAG）和企业微信工具。
 
 当前工具网关不是 MCP Server，但每个 HTTP 工具都有明确的未来 MCP 映射。后续只需要把 HTTP endpoint 替换为真实 MCP Server 或 Higress MCP 代理，Agent 的 Prompt / Skill / 工具契约可以保持稳定，不需要重新设计工具调用链。
 

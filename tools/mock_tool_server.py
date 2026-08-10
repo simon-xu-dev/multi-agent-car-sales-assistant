@@ -69,7 +69,7 @@ def call_tool(tools: LocalMockTools, name: str, payload: Dict[str, Any]) -> Any:
 
 
 class MockToolHandler(BaseHTTPRequestHandler):
-    server_version = "SalesFlowMockToolGateway/0.1"
+    server_version = "CarSalesMockToolGateway/0.1"
 
     def _send(self, status: HTTPStatus, payload: Dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
@@ -99,7 +99,7 @@ class MockToolHandler(BaseHTTPRequestHandler):
         parts = [unquote(part) for part in parsed.path.strip("/").split("/") if part]
         try:
             if parts == ["health"]:
-                self._send(HTTPStatus.OK, {"ok": True, "service": "salesflow-mock-tool-gateway"})
+                self._send(HTTPStatus.OK, {"ok": True, "service": "carsales-mock-tool-gateway"})
                 return
             if parts == ["scenarios"]:
                 self._send(HTTPStatus.OK, {"ok": True, "result": list_scenarios()})
@@ -138,13 +138,13 @@ class MockToolHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run SalesFlow HTTP mock tool gateway.")
+    parser = argparse.ArgumentParser(description="Run CarSales HTTP mock tool gateway.")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", default=18089, type=int)
     args = parser.parse_args()
 
     server = ThreadingHTTPServer((args.host, args.port), MockToolHandler)
-    print(f"SalesFlow mock tool gateway listening on http://{args.host}:{args.port}")
+    print(f"CarSales mock tool gateway listening on http://{args.host}:{args.port}")
     print("Health: GET /health")
     print("Tool call: POST /tools/{scenario_id}/{tool_name}.{function_name}")
     server.serve_forever()

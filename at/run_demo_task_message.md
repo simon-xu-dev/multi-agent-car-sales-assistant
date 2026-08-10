@@ -1,6 +1,6 @@
 # AgentTeams 销售任务消息
 
-8 个业务 Worker、独立 TeamLeader Worker `salesflow-demo-leader` 以及 `salesflow-demo` Team 创建完成后，在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `salesflow-demo` 的 Team 房间。
+8 个业务 Worker、独立 TeamLeader Worker `carsales-demo-leader` 以及 `carsales-demo` Team 创建完成后，在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `carsales-demo` 的 Team 房间。
 
 进入 Team 房间后，在输入框先输入并选中 `@<team_leader_name>`，再把下面的销售任务复制到这条 @ 消息里发送。不要把销售任务发给 `manager`。`manager` 用于创建和管理 Agent/Team；Team 房间中的 leader 用于接收业务任务并调度 Worker。
 

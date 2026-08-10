@@ -1,6 +1,6 @@
 # 运行证据索引（EVIDENCE）
 
-> 面向评审：本文件汇总 SalesFlow agentteams-demo 的可复现运行证据。所有证据均可在本地 3 步内复现。
+> 面向评审：本文件汇总 CarSales agentteams-demo 的可复现运行证据。所有证据均可在本地 3 步内复现。
 
 ## 1. 运行环境
 

@@ -1,6 +1,6 @@
-# SalesFlow：基于多 Agent 的汽车销售自主成交智能助手（AgentTeams 最小可运行 Demo）
+# CarSales：基于多 Agent 的汽车销售自主成交智能助手（AgentTeams 最小可运行 Demo）
 
-面向 GOAI「新智基座 | Agent Infra」赛题方向二（智能客服自主闭环）的汽车销售场景落地。用户只提供客户咨询与少量线索信息，AgentTeams 中的 8 个业务 LLM Agent 通过 HTTP mock 工具网关主动查询 CRM、库存、报价、金融、试驾、订单、知识库（RAG）与企业微信数据；创建 Team 时由 manager 创建独立 TeamLeader Worker `salesflow-demo-leader` 负责调度协作，完成「线索获取 — 需求分析 — 成交促进 — 售后运营 — 知识沉淀」的零人工销售闭环。
+面向 GOAI「新智基座 | Agent Infra」赛题方向二（智能客服自主闭环）的汽车销售场景落地。用户只提供客户咨询与少量线索信息，AgentTeams 中的 8 个业务 LLM Agent 通过 HTTP mock 工具网关主动查询 CRM、库存、报价、金融、试驾、订单、知识库（RAG）与企业微信数据；创建 Team 时由 manager 创建独立 TeamLeader Worker `carsales-demo-leader` 负责调度协作，完成「线索获取 — 需求分析 — 成交促进 — 售后运营 — 知识沉淀」的零人工销售闭环。
 
 完整运行手册见 [at/AGENTTEAMS_RUNBOOK.md](at/AGENTTEAMS_RUNBOOK.md)。
 
@@ -24,7 +24,7 @@
 
 | Agent | 作用 | 关键 Skill | 工具 |
 | --- | --- | --- | --- |
-| SalesFlow TeamLeader | 创建 Team 时由 manager 生成的独立 Worker，名称固定为 `salesflow-demo-leader` | 由 manager 创建 | 无直接工具调用 |
+| CarSales TeamLeader | 创建 Team 时由 manager 生成的独立 Worker，名称固定为 `carsales-demo-leader` | 由 manager 创建 | 无直接工具调用 |
 | Lead Intake | 多渠道会话归并去重分级 | `lead-fusion`, `profile-building` | `mock_crm`, `mock_wechat`, `mock_knowledge` |
 | Profile Builder | 构建客户画像（预算/家庭/场景/偏好） | `profile-building`, `deal-memory` | `mock_crm`, `mock_knowledge` |
 | Intent Analyst | 购车意图识别与跟进优先级 | `intent-scoring`, `deal-memory` | `mock_crm`, `mock_knowledge` |
@@ -37,7 +37,7 @@
 ## 目录结构
 
 ```text
-salesflow-demo/
+carsales-demo/
 ├── agents/            # 8 个业务 Agent 定义（评审材料，附录 A 模板）
 ├── skills/            # 11 个可复用 Skill（评审材料，附录 B 模板）
 ├── tools/             # HTTP mock 工具网关（8 个企业系统 + 验证探针）
@@ -81,9 +81,9 @@ docker exec -it hiclaw-manager curl http://<GATEWAY_IP>:18089/health
 
 如果 manager 容器名不是 `hiclaw-manager`，按运行手册第 4 步先确认实际容器名。
 
-4. 在 Element Web 打开 `manager` 房间，把 [at/create_agents_messages.md](at/create_agents_messages.md) 里的 `<MOCK_TOOL_BASE_URL>` 替换成 `http://<GATEWAY_IP>:18089` 后，将完整创建请求复制给 `manager`。创建请求已要求所有 Worker 使用 `qwenpow`（`copow`/`QwenPaw`）运行时，并由 `manager` 严格串行创建 8 个业务 Worker；创建 Team 时再生成独立 TeamLeader Worker `salesflow-demo-leader`。
+4. 在 Element Web 打开 `manager` 房间，把 [at/create_agents_messages.md](at/create_agents_messages.md) 里的 `<MOCK_TOOL_BASE_URL>` 替换成 `http://<GATEWAY_IP>:18089` 后，将完整创建请求复制给 `manager`。创建请求已要求所有 Worker 使用 `qwenpow`（`copow`/`QwenPaw`）运行时，并由 `manager` 严格串行创建 8 个业务 Worker；创建 Team 时再生成独立 TeamLeader Worker `carsales-demo-leader`。
 
-5. 在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `salesflow-demo` 的 Team 房间。进入房间后，在输入框先 `@<team_leader_name>` 选中带 leader 名字的成员，再把 [at/run_demo_task_message.md](at/run_demo_task_message.md) 中的第一个销售任务复制到这条 @ 消息里发送；等报告输出完成后，再用同样方式发送下一条。销售任务不要发给 `manager`。
+5. 在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `carsales-demo` 的 Team 房间。进入房间后，在输入框先 `@<team_leader_name>` 选中带 leader 名字的成员，再把 [at/run_demo_task_message.md](at/run_demo_task_message.md) 中的第一个销售任务复制到这条 @ 消息里发送；等报告输出完成后，再用同样方式发送下一条。销售任务不要发给 `manager`。
 
 6. 查看运行证据：
 

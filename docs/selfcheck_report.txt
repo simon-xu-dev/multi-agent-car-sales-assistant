@@ -1,4 +1,4 @@
-SalesFlow agentteams-demo 自检报告
+CarSales agentteams-demo 自检报告
 生成时间: 2026-08-04 16:01:52 CST
 运行环境: Python 3.13.9 @ Darwin 24.6.0 arm64
 复现命令: python3 tools/selfcheck.py

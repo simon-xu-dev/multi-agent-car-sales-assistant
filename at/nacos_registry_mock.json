@@ -7,17 +7,17 @@
   },
   "prompts": [
     {
-      "name": "salesflow.strategy.system",
+      "name": "carsales.strategy.system",
       "version": "0.1.0",
       "label": "stable",
-      "owner": "salesflow-team",
+      "owner": "carsales-team",
       "description": "System prompt contract for evidence-based sales strategy generation (quotes must follow policy, recommendations must cite RAG evidence)."
     },
     {
-      "name": "salesflow.negotiation.guard",
+      "name": "carsales.negotiation.guard",
       "version": "0.1.0",
       "label": "stable",
-      "owner": "salesflow-team",
+      "owner": "carsales-team",
       "description": "Concession guard prompt: stop auto-concession at authorized limit, escalate to approval or human handoff."
     }
   ],
@@ -46,7 +46,7 @@
   ],
   "agent_teams": [
     {
-      "name": "salesflow-demo",
+      "name": "carsales-demo",
       "version": "0.1.0",
       "label": "stable",
       "file": "at/team_spec.json",

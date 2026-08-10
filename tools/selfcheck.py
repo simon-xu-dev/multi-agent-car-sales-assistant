@@ -1,4 +1,4 @@
-"""SalesFlow mock 工具网关自检：验证 3 个场景的核心闭环逻辑。
+"""CarSales mock 工具网关自检：验证 3 个场景的核心闭环逻辑。
 
 用法: python3 tools/selfcheck.py
 不需要启动 HTTP 服务器，直接调用 LocalMockTools 验证业务逻辑。
