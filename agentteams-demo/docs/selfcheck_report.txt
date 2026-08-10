@@ -1,0 +1,50 @@
+SalesFlow agentteams-demo 自检报告
+生成时间: 2026-08-04 16:01:52 CST
+运行环境: Python 3.13.9 @ Darwin 24.6.0 arm64
+复现命令: python3 tools/selfcheck.py
+================================================================
+Scenarios available: ['family_suv_deal', 'first_car_finance', 'trade_in_renewal']
+
+== family_suv_deal: 家庭 SUV 全链路成交 ==
+  [PASS] 多渠道会话返回 3 条
+  [PASS] 线索初始状态 new
+  [PASS] 状态机流转 contacted
+  [PASS] 客户历史记忆返回
+  [PASS] 车型目录 3 款
+  [PASS] L7 库存可用
+  [PASS] 报价政策授权上限 1%
+  [PASS] 报价生成
+  [PASS] 报价计算正确
+  [PASS] 试驾档期存在
+  [PASS] 试驾预约 L1 自动成功
+  [PASS] 超授权优惠生成 L2 审批
+  [PASS] 审批任务创建
+  [PASS] 授权内优惠自动应用
+  [PASS] 库存预留 L1
+  [PASS] 订单草稿 L2 创建
+  [PASS] 订单幂等（同 order_key 不重复创建）
+  [PASS] 闭环验证 pending_approval
+  [PASS] 订单回滚成功
+  [PASS] 案例入库
+  [PASS] 案例 RAG 检索命中
+  [PASS] 工具调用 Trace 留痕
+
+== first_car_finance: 首购金融方案 ==
+  [PASS] 车型目录 3 款
+  [PASS] 金融方案生成 2 组
+  [PASS] 月供可复算
+  [PASS] 征信授权 L2 审批任务
+  [PASS] 审批状态查询
+  [PASS] 审批前订单仅草稿
+  [PASS] 闭环验证 pending_approval
+
+== trade_in_renewal: 老客户置换与售后 ==
+  [PASS] 历史记忆召回（3 年老客户）
+  [PASS] 置换案例 RAG 命中
+  [PASS] 置换 SOP 命中
+  [PASS] 3 万额外优惠超授权 -> L2
+  [PASS] 底线守护：重复大额让步不放行
+  [PASS] 售后模板消息 L1 发送
+  [PASS] 闭环验证 pending_approval
+
+===== RESULT: 36 passed, 0 failed =====

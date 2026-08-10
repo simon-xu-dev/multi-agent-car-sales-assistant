@@ -1,0 +1,151 @@
+{
+  "id": "first_car_finance",
+  "deal_id": "DEAL-2002",
+  "title": "首购客户金融方案闭环：短视频渠道 -> 画像 -> 意图识别 -> 金融方案 -> 征信授权审批 -> 订单草稿 -> 客户确认",
+  "customer": {
+    "name": "李先生",
+    "owner": "销售顾问-周婷",
+    "store": "上海虹桥店",
+    "profile_hint": "24 岁，刚工作两年，首次购车，预算 12-15 万，对月供敏感，需要金融方案支持，收入证明齐全。"
+  },
+  "session": {
+    "time": "14:05",
+    "channel": "douyin",
+    "text": "刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。",
+    "source": "抖音私信"
+  },
+  "sessions": [
+    {
+      "channel": "douyin",
+      "customer_id": "CUST-2002",
+      "time": "14:05",
+      "text": "刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。",
+      "owner": "抖音私信"
+    },
+    {
+      "channel": "phone",
+      "customer_id": "CUST-2002",
+      "time": "14:30",
+      "text": "电话转写：客户询问分期首付比例和月供，提到自己征信没问题、收入证明齐全，希望尽快锁定优惠。",
+      "owner": "电话转写"
+    }
+  ],
+  "lead": {
+    "lead_id": "LEAD-2002",
+    "stage": "new",
+    "source": "douyin+phone",
+    "score": 0.0,
+    "customer_id": "CUST-2002",
+    "created_at": "14:05",
+    "budget_hint": "12-15 万",
+    "finance_need": "分期购车，月供敏感"
+  },
+  "customer_history": [
+    {
+      "time": "2025-05-20",
+      "event": "短视频互动",
+      "detail": "在品牌直播间停留 20 分钟，咨询过秦PLUS 价格。"
+    }
+  ],
+  "models": [
+    {
+      "code": "QIN",
+      "name": "比亚迪秦PLUS DM-i",
+      "category": "紧凑型插混轿车",
+      "guide_price": 129800,
+      "subsidy": 4000,
+      "tags": ["首购", "插混", "省油", "性价比"],
+      "stock": {"store_002": 8},
+      "specs": {"seats": "5", "range_km": 1150, "fuel_cost": "百公里 3.8L 等效", "family_features": "用车成本低，适合通勤"}
+    },
+    {
+      "code": "SL03",
+      "name": "长安深蓝 SL03",
+      "category": "中型纯电轿车",
+      "guide_price": 149900,
+      "subsidy": 6000,
+      "tags": ["首购", "纯电", "科技", "颜值"],
+      "stock": {"store_002": 4},
+      "specs": {"seats": "5", "range_km": 560, "fuel_cost": "纯电，家充成本低", "family_features": "智能座舱，年轻人首选"}
+    },
+    {
+      "code": "L6",
+      "name": "吉利银河 L6",
+      "category": "紧凑型插混轿车",
+      "guide_price": 119800,
+      "subsidy": 3000,
+      "tags": ["首购", "插混", "均衡"],
+      "stock": {"store_002": 6},
+      "specs": {"seats": "5", "range_km": 1000, "fuel_cost": "百公里 4.1L 等效", "family_features": "均衡之选，配置丰富"}
+    }
+  ],
+  "price_policy": {
+    "base_discount_pct": 0.6,
+    "authorized_max_discount_pct": 1.0,
+    "tiers": {"normal": 0.0, "silver": 0.2, "gold": 0.5},
+    "rule": "标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。"
+  },
+  "testdrive_slots": [
+    {"store_id": "store_002", "model_code": "QIN", "slot": "2026-08-09 11:00"},
+    {"store_id": "store_002", "model_code": "SL03", "slot": "2026-08-09 14:00"},
+    {"store_id": "store_002", "model_code": "L6", "slot": "2026-08-10 10:00"}
+  ],
+  "knowledge": {
+    "products": [
+      {
+        "title": "比亚迪秦PLUS DM-i 产品知识",
+        "tags": ["秦PLUS", "比亚迪", "插混"],
+        "summary": "紧凑型插混轿车，综合续航 1150km，亏电油耗低，落地价 12-14 万，首购人群热门选择。",
+        "match_terms": ["秦", "比亚迪", "插混", "首购"]
+      },
+      {
+        "title": "长安深蓝 SL03 产品知识",
+        "tags": ["深蓝", "SL03", "纯电"],
+        "summary": "中型纯电轿车，智能座舱与科技配置突出，适合年轻首购用户，家充场景使用成本极低。",
+        "match_terms": ["深蓝", "SL03", "纯电"]
+      },
+      {
+        "title": "吉利银河 L6 产品知识",
+        "tags": ["银河", "L6", "吉利"],
+        "summary": "紧凑型插混轿车，配置均衡，价格门槛低，适合预算敏感的首购客户。",
+        "match_terms": ["银河", "L6", "吉利"]
+      }
+    ],
+    "sops": [
+      {
+        "title": "首购客户金融方案 SOP",
+        "tags": ["SOP", "首购", "金融", "征信"],
+        "summary": "1) 先确认预算与月供承受力；2) 推荐 2-3 款候选；3) 生成 2 组金融方案对比（低息 vs 银行分期）；4) 客户确认方案后，发起征信授权审批（涉及个人数据，必须 L2 人工审批）；5) 审批通过前不得创建正式订单，只保留订单草稿。",
+        "match_terms": ["SOP", "金融", "首购", "征信", "审批"]
+      },
+      {
+        "title": "征信数据使用边界",
+        "tags": ["合规", "征信", "数据"],
+        "summary": "征信数据仅用于金融审批场景，必须获得客户书面/线上授权，审批记录留痕 5 年，禁止用于营销。",
+        "match_terms": ["征信", "合规", "授权"]
+      }
+    ],
+    "cases": [
+      {
+        "title": "2025-09 张先生首购金融转化案例",
+        "tags": ["首购", "金融", "成交"],
+        "summary": "24 岁首购客户，预算 13 万。通过厂家低息方案（2.99%）将月供压到 2800 元以内，搭配 3 成首付，7 天成交秦PLUS。关键动作：金融方案前置 + 月供敏感点把控。",
+        "match_terms": ["首购", "金融", "月供", "成交"]
+      }
+    ]
+  },
+  "finance": {
+    "products": [
+      {"name": "厂家低息金融", "annual_rate_pct": 2.99},
+      {"name": "合作银行分期", "annual_rate_pct": 3.99}
+    ],
+    "approval_required": true,
+    "rule": "金融方案生成属于 L1 计算动作；征信授权与合同签署属于 L2 审批动作，审批通过前订单只能停留在草稿状态。"
+  },
+  "expected_outcome": {
+    "recommended_models": ["比亚迪秦PLUS DM-i", "吉利银河 L6"],
+    "low_risk_auto": ["金融方案对比生成（L1）", "标准报价（L1）"],
+    "approval_required": ["征信授权审批（L2）", "订单创建（L2 草稿）"],
+    "final_report": "画像 / 意图分级 / 推荐 / 金融方案对比 / 征信授权审批任务 / 订单草稿 / 等待人工审批与客户确认"
+  }
+}

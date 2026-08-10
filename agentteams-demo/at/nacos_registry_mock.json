@@ -1,0 +1,60 @@
+{
+  "registry_name": "nacos-ai-registry-mock",
+  "labels": {
+    "dev": "latest candidate for demo iteration",
+    "stable": "version loaded by the AT runner",
+    "rollback": "last known good resource binding"
+  },
+  "prompts": [
+    {
+      "name": "salesflow.strategy.system",
+      "version": "0.1.0",
+      "label": "stable",
+      "owner": "salesflow-team",
+      "description": "System prompt contract for evidence-based sales strategy generation (quotes must follow policy, recommendations must cite RAG evidence)."
+    },
+    {
+      "name": "salesflow.negotiation.guard",
+      "version": "0.1.0",
+      "label": "stable",
+      "owner": "salesflow-team",
+      "description": "Concession guard prompt: stop auto-concession at authorized limit, escalate to approval or human handoff."
+    }
+  ],
+  "skills": [
+    {"name": "lead-fusion", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "profile-building", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "intent-scoring", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "car-recommendation", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "quote-pricing", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "negotiation-guard", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "test-drive-booking", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "finance-plan", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "order-safe-execute", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "case-mining", "version": "0.1.0", "label": "stable", "state": "FORMAL"},
+    {"name": "deal-memory", "version": "0.1.0", "label": "stable", "state": "FORMAL"}
+  ],
+  "agent_specs": [
+    {"name": "lead-intake", "version": "0.1.0", "label": "stable", "file": "agents/lead-intake/Agent.md"},
+    {"name": "profile-builder", "version": "0.1.0", "label": "stable", "file": "agents/profile-builder/Agent.md"},
+    {"name": "intent-analyst", "version": "0.1.0", "label": "stable", "file": "agents/intent-analyst/Agent.md"},
+    {"name": "strategy-planner", "version": "0.1.0", "label": "stable", "file": "agents/strategy-planner/Agent.md"},
+    {"name": "negotiation-executor", "version": "0.1.0", "label": "stable", "file": "agents/negotiation-executor/Agent.md"},
+    {"name": "order-executor", "version": "0.1.0", "label": "stable", "file": "agents/order-executor/Agent.md"},
+    {"name": "customer-ops", "version": "0.1.0", "label": "stable", "file": "agents/customer-ops/Agent.md"},
+    {"name": "knowledge-miner", "version": "0.1.0", "label": "stable", "file": "agents/knowledge-miner/Agent.md"}
+  ],
+  "agent_teams": [
+    {
+      "name": "salesflow-demo",
+      "version": "0.1.0",
+      "label": "stable",
+      "file": "at/team_spec.json",
+      "release_policy": "Only FORMAL skills may be loaded by stable team specs."
+    }
+  ],
+  "audit_policy": {
+    "required_records": ["upload", "review", "publish", "agent_invocation"],
+    "risk_gate": "L0/L1 can execute in demo; L2/L3 must produce approval plan only; concession limit breach escalates to human sales."
+  }
+}

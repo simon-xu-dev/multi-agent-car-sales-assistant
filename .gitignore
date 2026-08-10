@@ -1,0 +1,23 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+
+# Sensitive
+*.env
+agentteams.env

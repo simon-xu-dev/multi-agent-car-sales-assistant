@@ -1,0 +1,180 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "time": "2026-08-10T06:12:20+0000",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"wechat\", \"customer_id\": \"CUST-2003\", \"owner\": \"企业微信\", \"text\": \"你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另外我 3 月份车险到期了，之前的售后权益还能用吗？\", \"time\": \"16:2..."
+    },
+    {
+      "time": "2026-08-10T06:12:23+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "DEAL-2003"
+      },
+      "result_preview": "{\"budget_hint\": \"置换购车，价格敏感\", \"created_at\": \"16:20\", \"customer_id\": \"CUST-2003\", \"is_repeat_customer\": true, \"lead_id\": \"LEAD-2003\", \"loyalty_tier\": \"silver\", \"score\": 0.0, \"sour..."
+    },
+    {
+      "time": "2026-08-10T06:12:28+0000",
+      "tool": "mock_wechat.get_session",
+      "args": {
+        "customer_id": "CUST-2003"
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2003\", \"sessions\": [{\"channel\": \"wechat\", \"customer_id\": \"CUST-2003\", \"owner\": \"企业微信\", \"text\": \"你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另..."
+    },
+    {
+      "time": "2026-08-10T06:12:31+0000",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "老客户置换政策 旧车评估 售后权益"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-10T06:12:37+0000",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": null
+      },
+      "result_preview": "[{\"match_terms\": [\"唐\", \"置换\", \"七座\"], \"summary\": \"中大型插混 SUV，刀片电池，七座可选，置换补贴力度大，适合老客户家庭升级。\", \"tags\": [\"唐\", \"比亚迪\", \"插混\", \"置换\"], \"title\": \"比亚迪唐 DM-i 产品知识\"}, {\"match_terms\": [\"海狮\", \"纯电..."
+    },
+    {
+      "time": "2026-08-10T06:13:03+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "置换"
+      },
+      "result_preview": "[{\"match_terms\": [\"老客户\", \"置换\", \"成交\", \"权益\"], \"summary\": \"4 年车龄老客户，旧车评估 10.8 万 + 置换补贴 1.2 万，通过售后权益折算（续保 9 折 + 保养券）锁定唐 DM-i，周期 3 天。关键动作：历史画像召回 + 置换补贴测算 + 售后权益打包。\", \"tags\": [\"老客户\", ..."
+    },
+    {
+      "time": "2026-08-10T06:14:21+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "老客户 售后 续保"
+      },
+      "result_preview": "[{\"match_terms\": [\"老客户\", \"置换\", \"成交\", \"权益\"], \"summary\": \"4 年车龄老客户，旧车评估 10.8 万 + 置换补贴 1.2 万，通过售后权益折算（续保 9 折 + 保养券）锁定唐 DM-i，周期 3 天。关键动作：历史画像召回 + 置换补贴测算 + 售后权益打包。\", \"tags\": [\"老客户\", ..."
+    },
+    {
+      "time": "2026-08-10T06:16:31+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "CUST-2003"
+      },
+      "result_preview": "{\"budget_hint\": \"置换购车，价格敏感\", \"created_at\": \"16:20\", \"customer_id\": \"CUST-2003\", \"is_repeat_customer\": true, \"lead_id\": \"LEAD-2003\", \"loyalty_tier\": \"silver\", \"score\": 0.0, \"sour..."
+    },
+    {
+      "time": "2026-08-10T06:16:31+0000",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2003"
+      },
+      "result_preview": "[{\"detail\": \"购买比亚迪秦PLUS DM-i，成交价 12.3 万，走厂家低息金融，车险由本店投保。\", \"event\": \"首次成交\", \"time\": \"2023-04-15\"}, {\"detail\": \"2 万公里保养，售后满意度 9 分。\", \"event\": \"售后保养\", \"time\": \"2024-06-20\"}, {\"det..."
+    },
+    {
+      "time": "2026-08-10T06:16:31+0000",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "老客户置换升级 秦PLUS 中大型SUV 三年车龄 品牌忠诚"
+      },
+      "result_preview": "[]"
+    },
+    {
+      "time": "2026-08-10T06:16:53+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"置换购车，价格敏感\", \"created_at\": \"16:20\", \"customer_id\": \"CUST-2003\", \"is_repeat_customer\": true, \"lead_id\": \"LEAD-2003\", \"loyalty_tier\": \"silver\", \"score\": 0.0, \"sour..."
+    },
+    {
+      "time": "2026-08-10T06:19:20+0000",
+      "tool": "mock_inventory.list_models",
+      "args": {},
+      "result_preview": "[{\"category\": \"中大型插混 SUV\", \"code\": \"TANG\", \"guide_price\": 179800, \"name\": \"比亚迪唐 DM-i\", \"specs\": {\"family_features\": \"大空间，适合家庭升级\", \"range_km\": 1000, \"safety\": \"刀片电池，6 气囊\", \"seats..."
+    },
+    {
+      "time": "2026-08-10T06:19:20+0000",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.8, \"rule\": \"老客户 silver 等级享受 0.2% 额外优惠；置换补贴与旧车评估价以门店报价为准。额外优惠超过授权 1% 必须生成 L2 审批；议价若触及底线（总优惠超过 3.5% 或申请额超过 3 万），必须停止自动让..."
+    },
+    {
+      "time": "2026-08-10T06:19:20+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "CUST-2003"
+      },
+      "result_preview": "{\"budget_hint\": \"置换购车，价格敏感\", \"created_at\": \"16:20\", \"customer_id\": \"CUST-2003\", \"is_repeat_customer\": true, \"lead_id\": \"LEAD-2003\", \"loyalty_tier\": \"silver\", \"score\": 0.0, \"sour..."
+    },
+    {
+      "time": "2026-08-10T06:19:29+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "TANG",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1798.0, \"customer_tier\": \"silver\", \"final_price\": 173002.0, \"guide_price\": 179800.0, \"model_code\": \"TANG\", \"model_name\": \"比..."
+    },
+    {
+      "time": "2026-08-10T06:19:29+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L6",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1898.0, \"customer_tier\": \"silver\", \"final_price\": 180902.0, \"guide_price\": 189800.0, \"model_code\": \"L6\", \"model_name\": \"比亚迪..."
+    },
+    {
+      "time": "2026-08-10T06:19:29+0000",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "TANG",
+        "store_id": "store_003"
+      },
+      "result_preview": "{\"available\": 4, \"enough_for_demo\": true, \"model_code\": \"TANG\", \"model_name\": \"比亚迪唐 DM-i\", \"store_id\": \"store_003\"}"
+    },
+    {
+      "time": "2026-08-10T06:19:29+0000",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "L6",
+        "store_id": "store_003"
+      },
+      "result_preview": "{\"available\": 3, \"enough_for_demo\": true, \"model_code\": \"L6\", \"model_name\": \"比亚迪海狮07\", \"store_id\": \"store_003\"}"
+    },
+    {
+      "time": "2026-08-10T06:25:00+0000",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.8, \"rule\": \"老客户 silver 等级享受 0.2% 额外优惠；置换补贴与旧车评估价以门店报价为准。额外优惠超过授权 1% 必须生成 L2 审批；议价若触及底线（总优惠超过 3.5% 或申请额超过 3 万），必须停止自动让..."
+    },
+    {
+      "time": "2026-08-10T06:25:05+0000",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"置换购车，价格敏感\", \"created_at\": \"16:20\", \"customer_id\": \"CUST-2003\", \"is_repeat_customer\": true, \"lead_id\": \"LEAD-2003\", \"loyalty_tier\": \"silver\", \"score\": 0.0, \"sour..."
+    },
+    {
+      "time": "2026-08-10T06:25:14+0000",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "TANG",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1798.0, \"customer_tier\": \"silver\", \"final_price\": 173002.0, \"guide_price\": 179800.0, \"model_code\": \"TANG\", \"model_name\": \"比..."
+    },
+    {
+      "time": "2026-08-10T06:25:29+0000",
+      "tool": "mock_finance.calc_plan",
+      "args": {
+        "price": 173002.0,
+        "down_payment": 25950.0,
+        "months": 36
+      },
+      "result_preview": "{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 25950.0, \"loan\": 147052.0, \"monthly_payment\": 4275.8, \"months\": 36, \"plan_id\": \"PLAN-FDD4E1\", \"product\": \"厂家低息金融\", \"total_in..."
+    }
+  ]
+}
