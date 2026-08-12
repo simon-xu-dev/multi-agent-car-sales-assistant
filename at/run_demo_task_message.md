@@ -17,6 +17,7 @@
 
 deal_id: DEAL-2001
 scenario_id: family_suv_deal
+deal_type: new_deal
 门店：杭州滨江旗舰店
 客户渠道：官网在线咨询 + 企业微信 + 电话
 
@@ -42,6 +43,7 @@ scenario_id: family_suv_deal
 
 deal_id: DEAL-2002
 scenario_id: first_car_finance
+deal_type: finance
 门店：上海虹桥店
 客户渠道：抖音私信 + 电话
 
@@ -65,6 +67,7 @@ scenario_id: first_car_finance
 
 deal_id: DEAL-2003
 scenario_id: trade_in_renewal
+deal_type: trade_in
 门店：广州天河店
 客户渠道：企业微信（老客户回访）+ 门店
 

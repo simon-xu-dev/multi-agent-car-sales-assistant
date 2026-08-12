@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 import uuid
 from pathlib import Path
@@ -24,6 +25,20 @@ LEAD_STAGES = [
 
 # 订单状态机
 ORDER_STAGES = ["draft", "pending_approval", "confirmed", "delivered", "cancelled"]
+
+# 门店别名 -> 场景标准 store_id（真实运行时 LLM 可能从任务文本推断出门店名，需统一归一化）
+STORE_ALIASES: Dict[str, List[str]] = {
+    "store_001": ["store_001", "hz-binjiang", "杭州滨江旗舰店", "杭州滨江店", "滨江店", "binjiang"],
+    "store_002": ["store_002", "sh-hongqiao", "上海虹桥店", "虹桥店", "hongqiao"],
+    "store_003": ["store_003", "gz-tianhe", "广州天河店", "天河店", "tianhe"],
+}
+
+# 检索停用词：无区分度的高频功能词，分词时忽略，避免稀释信号词
+_RAG_STOPWORDS = {
+    "的", "了", "在", "吗", "吧", "呢", "想", "要", "请问", "什么", "怎么", "如何",
+    "客户", "表示", "提出", "提到", "希望", "需要", "要求", "咨询", "进行", "完成",
+    "输出", "结果", "这个", "那个", "一下", "看看", "推荐", "查询", "评估", "计算",
+}
 
 
 def load_json(path: Path) -> Dict[str, Any]:
@@ -227,10 +242,19 @@ class LocalMockTools(BaseMockTools):
     def list_models(self) -> List[Dict[str, Any]]:
         return self._record("mock_inventory.list_models", {}, self._scenario("models", []))
 
+    def _resolve_store(self, store_id: Optional[str]) -> str:
+        """将门店名/别名归一化为场景标准 store_id，避免 LLM 推断名与数据键不匹配。"""
+        key = (store_id or "").lower().strip()
+        for canonical, aliases in STORE_ALIASES.items():
+            if key in (alias.lower() for alias in aliases):
+                return canonical
+        return store_id or ""
+
     def check_stock(self, model_code: str, store_id: str) -> Dict[str, Any]:
         model = self._model(model_code)
         if not model:
             raise ValueError(f"unknown model '{model_code}'")
+        store_id = self._resolve_store(store_id)
         stock = model.get("stock", {}).get(store_id, 0)
         result = {
             "model_code": model_code,
@@ -242,6 +266,7 @@ class LocalMockTools(BaseMockTools):
         return self._record("mock_inventory.check_stock", {"model_code": model_code, "store_id": store_id}, result)
 
     def reserve_car(self, model_code: str, store_id: str) -> Dict[str, Any]:
+        store_id = self._resolve_store(store_id)
         result = {
             "status": "reserved",
             "action": "reserve_car",
@@ -376,6 +401,7 @@ class LocalMockTools(BaseMockTools):
 
     # ---- mock_testdrive ----
     def list_slots(self, store_id: str, model_code: str) -> List[Dict[str, Any]]:
+        store_id = self._resolve_store(store_id)
         slots = [
             slot
             for slot in self._scenario("testdrive_slots", [])
@@ -384,6 +410,7 @@ class LocalMockTools(BaseMockTools):
         return self._record("mock_testdrive.list_slots", {"store_id": store_id, "model_code": model_code}, slots)
 
     def book_slot(self, customer_id: str, store_id: str, slot: str, model_code: str) -> Dict[str, Any]:
+        store_id = self._resolve_store(store_id)
         slots = [
             s for s in self._scenario("testdrive_slots", [])
             if s.get("store_id") == store_id and s.get("model_code") == model_code and s.get("slot") == slot
@@ -501,20 +528,54 @@ class LocalMockTools(BaseMockTools):
         return self._record("mock_knowledge.save_case", {"case": compact(case, 120)}, result)
 
     @staticmethod
-    def _match(docs: List[Dict[str, Any]], query: Optional[str]) -> List[Dict[str, Any]]:
+    def _segment(query: str) -> List[str]:
+        """切分检索词元：中文按 2-gram 滑动切词（无分词库依赖），保留含数字/字母的 token。
+
+        例："成交信号" -> ["成交", "交信", "信号"]，其中"成交"/"信号"可命中数据标签。
+        """
+        tokens = re.findall(r"[\u4e00-\u9fff]+|[A-Za-z0-9][A-Za-z0-9.%-]*", (query or "").lower())
+        terms: List[str] = []
+        for token in tokens:
+            if re.fullmatch(r"[\u4e00-\u9fff]{2,}", token):
+                terms.extend(token[i : i + 2] for i in range(len(token) - 1))
+            else:
+                terms.append(token)
+        return [t for t in terms if t and t not in _RAG_STOPWORDS]
+
+    @classmethod
+    def _match(cls, docs: List[Dict[str, Any]], query: Optional[str]) -> List[Dict[str, Any]]:
+        """加权 OR 检索：任一信号词命中即可返回，按相关度排序取 Top-3。
+
+        权重设计：match_terms(3) > tags(2) > 标题/摘要(1)。相比原 AND 全词匹配，
+        大幅降低真实运行时 LLM 长句查询的空结果率。
+        """
         if not query:
             return docs[:3]
-        # 按词拆分（支持空格/逗号分隔），全部命中才返回（AND 语义）
-        lowered = query.lower().replace("，", " ").replace(",", " ")
-        terms = [term for term in lowered.split() if term]
-        hits = []
+        terms = cls._segment(query)
+        if not terms:
+            return docs[:3]
+        scored: List[tuple] = []
         for doc in docs:
-            text = " ".join(
-                str(doc.get(k, "")) for k in ("title", "tags", "summary", "match_terms")
-            ).lower()
-            if all(term in text for term in terms):
-                hits.append(doc)
-        return hits[:3]
+            match_terms = " ".join(str(t) for t in doc.get("match_terms", [])).lower()
+            tags = " ".join(str(t) for t in doc.get("tags", [])).lower()
+            title = str(doc.get("title", "")).lower()
+            summary = str(doc.get("summary", "")).lower()
+            score = 0
+            hit_terms = []
+            for term in terms:
+                if term in match_terms:
+                    score += 3
+                    hit_terms.append(term)
+                elif term in tags:
+                    score += 2
+                    hit_terms.append(term)
+                elif term in title or term in summary:
+                    score += 1
+                    hit_terms.append(term)
+            if hit_terms:
+                scored.append((score, len(hit_terms), doc))
+        scored.sort(key=lambda item: (-item[0], -item[1]))
+        return [doc for _, _, doc in scored[:3]]
 
     # ---- mock_wechat ----
     def get_session(self, customer_id: str) -> Dict[str, Any]:

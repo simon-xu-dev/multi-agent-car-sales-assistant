@@ -33,6 +33,9 @@ Content-Type: application/json
 10. 所有工具数据都通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
 11. 每个业务任务都会携带 scenario_id（如 family_suv_deal），工具调用必须使用该 scenario_id 访问对应场景数据。
 12. LLM 推理超时应对：如果 Worker 在推理过程中遇到超时（900 秒无输出），必须先输出已完成的工具调用结果和中间状态，不要等待完整推理完成。每个 Worker 的 AgentSpec 中已包含具体的超时应对指令。
+13. 任务路由（deal_type）：每个业务任务携带线索标签 deal_type（new_deal / finance / trade_in / complaint，模拟 CRM 打标）。TeamLeader 必须先提取 deal_type 再按对应路径调度：new_deal 走完整主链；finance 跳过 lead-intake 直接画像后金融；trade_in 跳过 lead-intake 直达画像记忆召回；complaint 不进主链直接转人工交接。
+14. 环外异步：customer-ops（售后触达）与 knowledge-miner（案例沉淀）不阻塞主链——主链完成 check_deal 闭环验收后，由 TeamLeader 异步/并行扇出这两个 Worker，再汇总最终报告。
+15. 门店枚举映射：任务文本中的门店名对应标准 store_id（杭州滨江旗舰店/滨江店/HZ-BINJIANG -> store_001；上海虹桥店/虹桥店 -> store_002；广州天河店/天河店 -> store_003）。Worker 调用 check_stock / list_slots / book_slot / reserve_car 时必须传入标准 store_id，禁止直接使用门店中文名或自行猜测。
 
 统一工具调用协议：
 POST http://172.18.0.4:18089/tools/{scenario_id}/{tool_name}.{function_name}
@@ -408,16 +411,13 @@ Team 创建要求：
 - manager 只负责创建和管理；销售任务由 carsales-demo 对应的 Team 房间接收，用户需要在消息开头 @<team_leader_name>，该 mention 应指向 carsales-demo-leader。
 - 8 个业务 Worker 的 AgentSpec、Skill、工具契约都已在本消息中内联，不依赖 Worker 读取宿主机文件。
 - 所有工具数据通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
-- 收到销售任务后，由 TeamLeader 按任务拆解调度业务 Worker（按需调用，不需要 8 个全部参与）：
-  1. lead-intake 归并多渠道会话，输出线索与分级。
-  2. profile-builder 构建客户画像，输出置信度与证据。
-  3. intent-analyst 识别购车意图与跟进优先级。
-  4. strategy-planner 制定车型推荐、报价与跟进路径。
-  5. negotiation-executor 执行试驾预约、报价、优惠与金融方案；超授权优惠生成审批，触及底线转人工。
-  6. order-executor 创建订单草稿（幂等）、跟踪状态、回滚与成交验证。
-  7. customer-ops 在适用时执行售后触达与复购运营。
-  8. knowledge-miner 在闭环完成后沉淀成交案例。
-- 不要让用户运行 demo 脚本；用户只会给出客户咨询、deal_id 和 scenario_id。
+- 收到销售任务后，由 TeamLeader 按 deal_type 路由调度（按需调用，不需要 8 个全部参与）：
+  - new_deal（DEAL-2001 全链路成交）：lead-intake -> profile-builder -> intent-analyst -> strategy-planner -> negotiation-executor -> order-executor（check_deal）-> 异步扇出 customer-ops + knowledge-miner -> 汇总报告。
+  - finance（DEAL-2002 首购金融）：跳过 lead-intake，profile-builder -> intent-analyst -> strategy-planner -> negotiation-executor（金融方案 + 征信 L2 审批）-> order-executor（check_deal）-> 异步 knowledge-miner -> 汇总报告。
+  - trade_in（DEAL-2003 老客户置换）：跳过 lead-intake，profile-builder（记忆召回）-> strategy-planner（置换方案）-> negotiation-executor（议价底线/转人工）-> order-executor（check_deal）-> 异步 customer-ops + knowledge-miner -> 汇总报告。
+  - complaint（投诉/价格异议）：不进主链，直接转人工并输出交接单。
+- 主链串行推进，各步骤的中间结论（画像、策略、执行结果）必须随消息传给下一个 Worker，禁止跳步、并行争抢同一工具或跳过 check_deal 直接写报告。
+- 不要让用户运行 demo 脚本；用户只会给出客户咨询、deal_id、scenario_id 和 deal_type（线索标签）。
 - 每次只处理一个销售任务；处理完成后输出一份销售闭环报告。
 - 销售闭环报告必须包含：线索与画像、推荐与报价、执行动作（低风险自动/高风险审批）、审批项、转人工项、订单状态、案例沉淀结果。
 

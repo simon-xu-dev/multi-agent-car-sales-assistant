@@ -105,18 +105,66 @@
       "tools": ["mock_knowledge", "mock_crm"]
     }
   ],
-  "workflow": [
-    {"step": 1, "agent": "carsales_demo_leader", "task": "receive_deal_task_extract_deal_id_scenario_id_and_dispatch"},
-    {"step": 2, "agent": "lead_intake", "task": "fuse_multi_channel_sessions_and_grade_lead"},
-    {"step": 3, "agent": "profile_builder", "task": "build_customer_profile_with_confidence"},
-    {"step": 4, "agent": "intent_analyst", "task": "score_intent_and_set_priority"},
-    {"step": 5, "agent": "strategy_planner", "task": "generate_recommendation_quote_and_follow_up_path"},
-    {"step": 6, "agent": "negotiation_executor", "task": "execute_low_risk_actions_and_handle_approvals"},
-    {"step": 7, "agent": "order_executor", "task": "create_order_draft_verify_deal"},
-    {"step": 8, "agent": "customer_ops", "task": "after_sales_touch_and_revival_plan_if_applicable"},
-    {"step": 9, "agent": "knowledge_miner", "task": "mine_and_save_deal_case"},
-    {"step": 10, "agent": "carsales_demo_leader", "task": "compose_final_deal_report"}
-  ],
+  "workflow": {
+    "version": "0.3.0",
+    "routing": {
+      "field": "deal_type",
+      "source": "任务消息携带的线索标签（模拟 CRM 打标）；TeamLeader 必须先从任务文本提取 deal_type，无法判断时按 new_deal 处理",
+      "paths": {
+        "new_deal": {
+          "desc": "新客全链路成交（DEAL-2001）",
+          "pipeline": [
+            {"step": 1, "agent": "carsales_demo_leader", "task": "receive_deal_task_extract_deal_id_scenario_id_deal_type_and_dispatch"},
+            {"step": 2, "agent": "lead_intake", "task": "fuse_multi_channel_sessions_and_grade_lead"},
+            {"step": 3, "agent": "profile_builder", "task": "build_customer_profile_with_confidence"},
+            {"step": 4, "agent": "intent_analyst", "task": "score_intent_and_set_priority"},
+            {"step": 5, "agent": "strategy_planner", "task": "generate_recommendation_quote_and_follow_up_path"},
+            {"step": 6, "agent": "negotiation_executor", "task": "execute_low_risk_actions_and_handle_approvals"},
+            {"step": 7, "agent": "order_executor", "task": "create_order_draft_verify_deal"}
+          ]
+        },
+        "finance": {
+          "desc": "首购金融专项（DEAL-2002）：跳过线索归并，画像后直达金融方案与征信审批",
+          "pipeline": [
+            {"step": 1, "agent": "carsales_demo_leader", "task": "receive_deal_task_and_dispatch_finance_path"},
+            {"step": 2, "agent": "profile_builder", "task": "build_customer_profile_with_confidence"},
+            {"step": 3, "agent": "intent_analyst", "task": "score_intent_and_set_priority"},
+            {"step": 4, "agent": "strategy_planner", "task": "recommend_models_and_prepare_quote"},
+            {"step": 5, "agent": "negotiation_executor", "task": "generate_finance_plans_and_submit_credit_approval"},
+            {"step": 6, "agent": "order_executor", "task": "create_order_draft_verify_deal"}
+          ]
+        },
+        "trade_in": {
+          "desc": "老客户置换与售后（DEAL-2003）：直达画像记忆召回，议价触底转人工，售后与沉淀并行",
+          "pipeline": [
+            {"step": 1, "agent": "carsales_demo_leader", "task": "receive_deal_task_and_dispatch_trade_in_path"},
+            {"step": 2, "agent": "profile_builder", "task": "recall_history_and_build_profile"},
+            {"step": 3, "agent": "strategy_planner", "task": "generate_trade_in_plan_and_quote"},
+            {"step": 4, "agent": "negotiation_executor", "task": "handle_concession_guard_or_escalate"},
+            {"step": 5, "agent": "order_executor", "task": "create_order_draft_verify_deal"}
+          ]
+        },
+        "complaint": {
+          "desc": "投诉/价格异议：不进主链，直接转人工并输出交接单",
+          "pipeline": [
+            {"step": 1, "agent": "carsales_demo_leader", "task": "classify_as_complaint_and_escalate_with_handoff"}
+          ]
+        }
+      },
+      "default": "new_deal"
+    },
+    "async_after_close": {
+      "desc": "闭环验收（check_deal）后异步扇出，不阻塞主链，可并行执行",
+      "agents": [
+        {"agent": "customer_ops", "task": "after_sales_touch_and_revival_plan_if_applicable"},
+        {"agent": "knowledge_miner", "task": "mine_and_save_deal_case"}
+      ]
+    },
+    "final_report": {
+      "agent": "carsales_demo_leader",
+      "task": "compose_final_deal_report"
+    }
+  },
   "risk_policy": {
     "auto_execute": ["L0", "L1"],
     "approval_only": ["L2", "L3"],

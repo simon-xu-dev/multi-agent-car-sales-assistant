@@ -90,6 +90,24 @@ def scenario_family_suv() -> None:
     check("案例 RAG 检索命中", len(cases) >= 1)
     check("工具调用 Trace 留痕", len(t.trace) >= 10, f"trace={len(t.trace)}")
 
+    # ---- 真实运行失败查询回归（加权 OR 检索后应命中，不再空结果） ----
+    prod_rag = t.search_product("新能源六座SUV 25万")
+    check("RAG 长句产品检索命中（真实失败查询回归）", len(prod_rag) >= 1, f"got {len(prod_rag)}")
+    sop_rag = t.search_sop("家庭SUV 新能源 六座 试驾 意图评估 BANT")
+    check("RAG SOP 长句检索命中（含 BANT 信号词）", len(sop_rag) >= 1, f"got {len(sop_rag)}")
+    sig_rag = t.search_sop("成交信号")
+    check("RAG 成交信号检索命中", len(sig_rag) >= 1, f"got {len(sig_rag)}")
+    follow_rag = t.search_sop("跟进")
+    check("RAG 跟进 SOP 检索命中", len(follow_rag) >= 1, f"got {len(follow_rag)}")
+    case_rag = t.search_case("家庭购车 二胎 SUV 试驾体验")
+    check("RAG 案例长句检索命中", len(case_rag) >= 1, f"got {len(case_rag)}")
+
+    # ---- 门店别名映射（真实运行时 LLM 从任务文本推断门店名） ----
+    stock_alias = t.check_stock("L7", "HZ-BINJIANG")
+    check("门店别名 HZ-BINJIANG 库存可查", stock_alias["available"] >= 1, str(stock_alias))
+    slots_alias = t.list_slots("杭州滨江旗舰店", "L7")
+    check("门店中文名试驾档期可查", len(slots_alias) >= 1, f"got {len(slots_alias)}")
+
 
 def scenario_first_car_finance() -> None:
     print("\n== first_car_finance: 首购金融方案 ==")

@@ -4,6 +4,7 @@ import argparse
 import json
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, Callable, Dict
 from urllib.parse import unquote, urlparse
 
@@ -11,6 +12,15 @@ from mock_tools import LocalMockTools, list_scenarios
 
 
 TOOL_STATES: Dict[str, LocalMockTools] = {}
+TRACE_DIR: Path = Path("run_evidence_live")
+
+
+def persist_last_trace(scenario_id: str) -> None:
+    """将最近一次工具调用 Trace 追加落盘（JSONL），重启后证据不丢失。"""
+    TRACE_DIR.mkdir(parents=True, exist_ok=True)
+    record = get_state(scenario_id).trace[-1]
+    with (TRACE_DIR / f"{scenario_id}.jsonl").open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def get_state(scenario_id: str) -> LocalMockTools:
@@ -127,8 +137,11 @@ class MockToolHandler(BaseHTTPRequestHandler):
             payload = self._read_json()
             if tool_call == "reset":
                 result = reset_state(scenario_id)
+                with (TRACE_DIR / f"{scenario_id}.jsonl").open("a", encoding="utf-8") as f:
+                    f.write(json.dumps({"event": "reset", "time": result.get("status")}, ensure_ascii=False) + "\n")
             else:
                 result = call_tool(get_state(scenario_id), tool_call, payload)
+                persist_last_trace(scenario_id)
             self._send(HTTPStatus.OK, {"ok": True, "result": result})
         except Exception as exc:
             self._send(HTTPStatus.BAD_REQUEST, {"ok": False, "error": str(exc)})
@@ -141,12 +154,16 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run CarSales HTTP mock tool gateway.")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", default=18089, type=int)
+    parser.add_argument("--trace-dir", default="run_evidence_live", help="trace JSONL 持久化目录（重启不丢）")
     args = parser.parse_args()
+    global TRACE_DIR
+    TRACE_DIR = Path(args.trace_dir)
 
     server = ThreadingHTTPServer((args.host, args.port), MockToolHandler)
     print(f"CarSales mock tool gateway listening on http://{args.host}:{args.port}")
     print("Health: GET /health")
     print("Tool call: POST /tools/{scenario_id}/{tool_name}.{function_name}")
+    print(f"Trace persistence: {TRACE_DIR}/{{scenario_id}}.jsonl")
     server.serve_forever()
 
 
