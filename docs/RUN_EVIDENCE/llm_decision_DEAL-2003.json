@@ -1,0 +1,87 @@
+{
+  "scenario_id": "trade_in_renewal",
+  "deal_id": "DEAL-2003",
+  "approval_gate": {
+    "context": {
+      "scenario_id": "trade_in_renewal",
+      "deal_type": "trade_in",
+      "customer_tier": "vip",
+      "model_code": "TANG",
+      "price": 209800,
+      "quote_id": "QUOTE-DEMO",
+      "approval_type": "discount_override",
+      "approval_detail": "优惠金额 30000 让步原因「置换压价（VIP 客户要求额外优惠）」",
+      "authorization_info": "优惠让步授权底线 1%（约 2098 元），VIP 额外授权 5%",
+      "evidence_status": "置换佐证不充分：客户为 VIP 但仅口头压价，未提供竞品报价单/旧车残值评估/置换补贴政策依据，重大让步合理性待核",
+      "memory_recall": "无（首单，无可复用历史经验）",
+      "order_id": "ORD-DEMO",
+      "order_status": "draft",
+      "approval_refs": [
+        "APR-DEMO"
+      ],
+      "deal_summary": "尚无可验证的执行动作，闭环未启动。 状态=in_progress 待审0/通过0/驳回0"
+    },
+    "outcome": {
+      "decision": "pending",
+      "approver": "门店经理",
+      "reason": "优惠让步30000元（14.3%）远超授权边界（VIP总授权上限6%，即约12588元），且置换佐证缺失，无法验证‘置换压价’合理性，属高风险超限让步，需人工复核材料与背景。",
+      "outcome": "human_handoff",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"decision\": \"pending\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"优惠让步30000元（14.3%）远超授权边界（VIP总授权上限6%，即约12588元），且置换佐证缺失，无法验证‘置换压价’合理性，属高风险超限让步，需人工复核材料与背景。\",\n  \"outcome\": \"human_handoff\"\n}",
+      "scenario_id": "trade_in_renewal"
+    }
+  },
+  "recommendation_review": {
+    "context": {
+      "scenario_id": "trade_in_renewal",
+      "deal_type": "trade_in",
+      "customer_tier": "vip",
+      "budget": "15-25 万",
+      "use_case": "置换升级 / 家庭出行",
+      "preferences": "七座、空间、置换补贴",
+      "intent_score": 70,
+      "intent_stage": "decision",
+      "priority": "P1",
+      "model_code": "TANG",
+      "model_name": "唐 DM-i",
+      "guide_price": 209800,
+      "final_price": 173000.0,
+      "stock_ok": true,
+      "memory_recall": "无（首单，无可复用历史经验）"
+    },
+    "outcome": {
+      "recommendation_reason": "唐 DM-i 为七座插电混动SUV，提供越级空间与低使用成本，完美契合VIP客户置换升级+家庭出行需求，且17.3万最终报价落在15-25万预算带内，叠加置换补贴可进一步降低持有成本。",
+      "fit_confidence": "high",
+      "risk_flag": "none",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"recommendation_reason\": \"唐 DM-i 为七座插电混动SUV，提供越级空间与低使用成本，完美契合VIP客户置换升级+家庭出行需求，且17.3万最终报价落在15-25万预算带内，叠加置换补贴可进一步降低持有成本。\",\n  \"fit_confidence\": \"high\",\n  \"risk_flag\": \"none\"\n}",
+      "scenario_id": "trade_in_renewal"
+    }
+  },
+  "tool_planning": {
+    "context": {
+      "scenario_id": "trade_in_renewal",
+      "deal_type": "trade_in",
+      "customer_tier": "vip",
+      "model_code": "TANG",
+      "budget": "15-25 万",
+      "intent_score": "70",
+      "intent_stage": "decision"
+    },
+    "outcome": {
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_inventory.check_stock",
+        "mock_price.get_policy",
+        "mock_price.calc_quote"
+      ],
+      "planning_reason": "客户处于 decision 阶段且意向明确（TANG 车型、VIP 客群），但需先确认 TANG 是否在可售目录中（list_models）；再基于具体车型和门店校验库存可行性（check_stock）；随后获取最新价格政策以支撑精准报价（get_policy）；最后整合车型、客群、政策信息生成报价单（calc_quote）——符合‘意向明确时先验库存’的前提是已知车型有效，故前置 list_models 确保 TANG 属于当前可售范围，避免无效库存查询。",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"tool_order\": [\"mock_inventory.list_models\", \"mock_inventory.check_stock\", \"mock_price.get_policy\", \"mock_price.calc_quote\"],\n  \"planning_reason\": \"客户处于 decision 阶段且意向明确（TANG 车型、VIP 客群），但需先确认 TANG 是否在可售目录中（list_models）；再基于具体车型和门店校验库存可行性（check_stock）；随后获取最新价格政策以支撑精准报价（get_policy）；最后整合车型、客群、政策信息生成报价单（calc_quote）——符合‘意向明确时先验库存’的前提是已知车型有效，故前置 list_models 确保 TANG 属于当前可售范围，避免无效库存查询。\"\n}",
+      "scenario_id": "trade_in_renewal"
+    }
+  }
+}

@@ -230,17 +230,60 @@ carsales-demo 对应的 Team 房间在哪里？请告诉我 Matrix 会话列表�
 
 ## 8. 查看运行证据（可观测）
 
-工具网关记录了全量工具调用 Trace，可用于评审与回放：
+工具网关提供四类可观测端点（OTel-GenAI 风格）：
 
 ```bash
+# Trace：Agent/Skill→Tool span（含 trace_id/span_id/span_kind/status/duration_ms/parent_span_id）
 curl http://127.0.0.1:18089/tools/family_suv_deal/tools/trace
+# Log：结构化决策/审批/失败事件（通过 trace_id 与 Trace 关联）
+curl http://127.0.0.1:18089/tools/family_suv_deal/logs
+# Metrics：调用数/成功率/时延/按工具按类型
+curl http://127.0.0.1:18089/tools/family_suv_deal/metrics
+# Audit：审计轨迹（结构化 actions，含 action_id/name/risk_level/time/关联业务键）
+curl http://127.0.0.1:18089/tools/family_suv_deal/audit
+curl "http://127.0.0.1:18089/tools/family_suv_deal/audit?approval_id=APR-xxx"  # 按审批单筛选
 ```
+
+> 审计轨迹同时以 append-only JSONL 落盘到 `run_evidence_live/{scenario_id}_audit.jsonl`（每条 action 携带 `trace_id`），重启不丢失，可独立回放审计。
+
+### 8.1 安全审计闭环（审批决策 → 回滚/确认 → 审计留痕）
+
+高风险动作（L2）禁止默认放行，必须经人工审批决策后才能 confirm 或 rollback：
+
+```bash
+# 1) Worker 管线产出 L2 审批 + 订单草稿（apply_discount 超授权 / submit_approval 征信）
+# 2) 审批决策（approve / reject，决策与执行分离）
+curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_finance.reject \
+  -H 'Content-Type: application/json' \
+  -d '{"approval_id":"APR-xxx","approver":"门店经理-张伟","reason":"让步超出底线"}'
+#    -> reject 标记关联订单 rollback_requested（不自动回滚）
+# 3) 驳回后 confirm 必须被门禁拦截（禁止默认放行）
+curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_order.confirm_order \
+  -H 'Content-Type: application/json' -d '{"order_id":"ORD-xxx"}'   # -> blocked: rejected_approvals
+# 4) 显式回滚（执行层）
+curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_order.rollback_order \
+  -H 'Content-Type: application/json' -d '{"order_id":"ORD-xxx"}'    # -> cancelled, rollback_point=draft
+# 5) 审计轨迹查询（全量 / 按 approval_id / 按 order_id）
+curl http://127.0.0.1:18089/tools/family_suv_deal/audit
+```
+
+LLM 决策演示 `python3 tools/llm_decision_demo.py` 独立演示三个 LLM 自主决策点的三安全分支对齐：
+DEAL-2001 reject→rollback（rolled_back）、DEAL-2002 approve→confirm（won）、DEAL-2003 pending→human_handoff（禁止默认放行）。
 
 每个场景独立状态，重置后重新演示：
 
 ```bash
 curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/reset -H 'Content-Type: application/json' -d '{}'
 ```
+
+证据归档（OSS 等价 Skill，闭环后异步执行不阻塞主链）：
+
+```bash
+curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/archive -H 'Content-Type: application/json' -d '{"deal_id":"DEAL-2001"}'
+curl http://127.0.0.1:18089/tools/family_suv_deal/archives   # 按 trace_id 回溯已归档证据
+```
+
+> **形成 Agent→Tool 完整 trace 树（G3）**：在 `at/create_agents_messages.md` 的 Worker 工具契约中，要求 Worker 调用工具网关时携带 W3C `traceparent` 头（`00-<trace_id>-<agent_span_id>-01`）。网关 `_parse_traceparent` 现已返回 `(trace_id, parent_span_id)`，工具 span 采用传播的 `trace_id`、`parent_span_id` 指向 Agent 层 span——**工具层 trace 树已一致**（同一 trace 的所有 span 共享 trace_id）。Agent/LLM 层 span 由 AgentTeams 运行时或 LoongSuite/AgentScope Studio 采集，补齐后即形成 Agent→Skill→Tool 完整 trace 树。
 
 ## 后续替换点
 

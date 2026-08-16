@@ -1,0 +1,87 @@
+{
+  "scenario_id": "first_car_finance",
+  "deal_id": "DEAL-2002",
+  "approval_gate": {
+    "context": {
+      "scenario_id": "first_car_finance",
+      "deal_type": "finance",
+      "customer_tier": "normal",
+      "model_code": "QIN",
+      "price": 129800,
+      "quote_id": "QUOTE-DEMO",
+      "approval_type": "credit_authorization",
+      "approval_detail": "优惠金额 0 让步原因「征信授权审批」",
+      "authorization_info": "金融征信需审批，材料齐全方可放行",
+      "evidence_status": "征信材料齐全：身份证 + 6 个月银行流水 + 个人征信报告均已提交并核验通过，客户首购资质符合金融准入",
+      "memory_recall": "无（首单，无可复用历史经验）",
+      "order_id": "ORD-DEMO",
+      "order_status": "draft",
+      "approval_refs": [
+        "APR-DEMO"
+      ],
+      "deal_summary": "尚无可验证的执行动作，闭环未启动。 状态=in_progress 待审0/通过0/驳回0"
+    },
+    "outcome": {
+      "decision": "approve",
+      "approver": "门店经理",
+      "reason": "征信材料齐全（身份证+6个月银行流水+个人征信报告均已核验通过），客户为首购且符合金融准入资质，审批项为常规金融征信授权，未涉及让步（优惠金额0）、无合规越界，完全满足授权边界要求。",
+      "outcome": "confirm",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"decision\": \"approve\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"征信材料齐全（身份证+6个月银行流水+个人征信报告均已核验通过），客户为首购且符合金融准入资质，审批项为常规金融征信授权，未涉及让步（优惠金额0）、无合规越界，完全满足授权边界要求。\",\n  \"outcome\": \"confirm\"\n}",
+      "scenario_id": "first_car_finance"
+    }
+  },
+  "recommendation_review": {
+    "context": {
+      "scenario_id": "first_car_finance",
+      "deal_type": "finance",
+      "customer_tier": "normal",
+      "budget": "10-15 万",
+      "use_case": "首购代步 / 通勤",
+      "preferences": "经济、新能源、智能",
+      "intent_score": 65,
+      "intent_stage": "consideration",
+      "priority": "P2",
+      "model_code": "QIN",
+      "model_name": "秦 PLUS",
+      "guide_price": 129800,
+      "final_price": 125706.0,
+      "stock_ok": true,
+      "memory_recall": "无（首单，无可复用历史经验）"
+    },
+    "outcome": {
+      "recommendation_reason": "秦 PLUS 为插电混动新能源车型，兼顾低使用成本（经济）与无续航焦虑，搭载DiLink智能网联系统满足智能偏好，车身尺寸和配置对首购代步/通勤场景实用且不冗余，指导价12.98万、终报12.57万精准落在客户10–15万预算中枢，库存可用保障交付确定性。",
+      "fit_confidence": "high",
+      "risk_flag": "none",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"recommendation_reason\": \"秦 PLUS 为插电混动新能源车型，兼顾低使用成本（经济）与无续航焦虑，搭载DiLink智能网联系统满足智能偏好，车身尺寸和配置对首购代步/通勤场景实用且不冗余，指导价12.98万、终报12.57万精准落在客户10–15万预算中枢，库存可用保障交付确定性。\",\n  \"fit_confidence\": \"high\",\n  \"risk_flag\": \"none\"\n}",
+      "scenario_id": "first_car_finance"
+    }
+  },
+  "tool_planning": {
+    "context": {
+      "scenario_id": "first_car_finance",
+      "deal_type": "finance",
+      "customer_tier": "normal",
+      "model_code": "QIN",
+      "budget": "10-15 万",
+      "intent_score": "65",
+      "intent_stage": "consideration"
+    },
+    "outcome": {
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_price.get_policy",
+        "mock_inventory.check_stock",
+        "mock_price.calc_quote"
+      ],
+      "planning_reason": "客户处于consideration阶段（意向模糊，评分仅65），需先通过list_models明确QIN车型在10-15万预算下的可选具体款型及配置范围；价格敏感（finance成交+预算区间窄）故次优先获取最新价格政策以支撑后续报价合理性；确认目标车型后，再check_stock保障推荐可交付性；最后用calc_quote生成正式quote_id完成闭环。",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"tool_order\": [\"mock_inventory.list_models\", \"mock_price.get_policy\", \"mock_inventory.check_stock\", \"mock_price.calc_quote\"],\n  \"planning_reason\": \"客户处于consideration阶段（意向模糊，评分仅65），需先通过list_models明确QIN车型在10-15万预算下的可选具体款型及配置范围；价格敏感（finance成交+预算区间窄）故次优先获取最新价格政策以支撑后续报价合理性；确认目标车型后，再check_stock保障推荐可交付性；最后用calc_quote生成正式quote_id完成闭环。\"\n}",
+      "scenario_id": "first_car_finance"
+    }
+  }
+}

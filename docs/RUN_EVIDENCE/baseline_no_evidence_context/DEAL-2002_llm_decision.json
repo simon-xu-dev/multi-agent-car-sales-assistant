@@ -1,0 +1,32 @@
+{
+  "scenario_id": "first_car_finance",
+  "deal_id": "DEAL-2002",
+  "decision_context": {
+    "scenario_id": "first_car_finance",
+    "deal_type": "finance",
+    "customer_tier": "normal",
+    "model_code": "QIN",
+    "price": 129800.0,
+    "quote_id": "QUOTE-FIRST_CAR_FINANCE-1",
+    "approval_type": "credit_authorization",
+    "approval_detail": "金融方案 PLAN-39F70A 客户 CUST-2002 征信授权审批",
+    "authorization_info": "金融征信需审批，材料齐全方可放行",
+    "memory_recall": "DEAL-2001: ",
+    "order_id": "ORD-BED599",
+    "order_status": "draft",
+    "approval_refs": [
+      "APR-168659"
+    ],
+    "deal_summary": "存在待人工审批的高风险动作（大额优惠 / 征信授权），成交挂起等待审批。 状态=pending_approval 待审1/通过0/驳回0"
+  },
+  "llm_decision": {
+    "decision": "pending",
+    "approver": "门店经理",
+    "reason": "征信授权审批属金融合规强管控项，材料齐全性未在输入中明确验证，且历史同类型成交（DEAL-2001）已因‘待人工审批的高风险动作’挂起，当前无佐证材料完备或客户资质强化信息，不满足自主放行条件。",
+    "outcome": "human_handoff",
+    "decision_source": "llm",
+    "llm_model": "qwen-plus",
+    "raw_response": "{\n  \"decision\": \"pending\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"征信授权审批属金融合规强管控项，材料齐全性未在输入中明确验证，且历史同类型成交（DEAL-2001）已因‘待人工审批的高风险动作’挂起，当前无佐证材料完备或客户资质强化信息，不满足自主放行条件。\",\n  \"outcome\": \"human_handoff\"\n}",
+    "scenario_id": "first_car_finance"
+  }
+}

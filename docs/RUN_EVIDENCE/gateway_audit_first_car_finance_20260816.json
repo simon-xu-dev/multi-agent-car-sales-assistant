@@ -1,0 +1,54 @@
+{
+  "ok": true,
+  "trace_id": "f47bae29ba14407494cb072d1121ac73",
+  "result": {
+    "total": 5,
+    "actions": [
+      {
+        "action_id": "ACT-9d16f4db",
+        "name": "update_lead_stage",
+        "risk_level": "L0",
+        "time": "2026-08-16T16:51:35+0800",
+        "lead_id": "LEAD-2002",
+        "stage": "qualified"
+      },
+      {
+        "action_id": "ACT-82f015cd",
+        "name": "submit_credit_approval",
+        "risk_level": "L2",
+        "time": "2026-08-16T17:29:02+0800",
+        "plan_id": "PLAN-ACBF85",
+        "customer_id": "CUST-2002",
+        "approval_id": "APR-99ADBC"
+      },
+      {
+        "action_id": "ACT-9d43f63f",
+        "name": "reserve_car",
+        "risk_level": "L1",
+        "time": "2026-08-16T17:31:54+0800",
+        "model_code": "QIN",
+        "store_id": "store_002"
+      },
+      {
+        "action_id": "ACT-7976a0fa",
+        "name": "create_order",
+        "risk_level": "L2",
+        "time": "2026-08-16T17:32:00+0800",
+        "order_id": "ORD-DBA506",
+        "order_key": "ORDER-FIRST_CAR_FINANCE-20260816-06",
+        "quote_id": "QUOTE-FIRST_CAR_FINANCE-8",
+        "approval_refs": [
+          "APR-99ADBC"
+        ]
+      },
+      {
+        "action_id": "ACT-da0e5263",
+        "name": "send_template_message",
+        "risk_level": "L1",
+        "time": "2026-08-16T17:43:50+0800",
+        "customer_id": "CUST-2002",
+        "template": "credit_approval_update"
+      }
+    ]
+  }
+}

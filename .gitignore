@@ -21,3 +21,12 @@ Thumbs.db
 # Sensitive
 *.env
 agentteams.env
+
+# 运行时产物（工具网关 trace / 证据归档 bucket，每次运行重新生成）
+run_evidence_live/
+run_evidence_archive/
+
+# 本地备份与临时文件
+*.pptx.bak
+ppt_*_tmp.txt
+ppt_text_dump.txt

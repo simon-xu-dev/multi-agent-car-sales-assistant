@@ -2,16 +2,12 @@
 
 AgentTeams 启动后，把下面这一整段消息复制到 `manager` 房间发送一次即可。消息内已经包含 8 个业务 Worker 和 1 个 Team 的完整定义；TeamLeader 由 manager 在创建 Team 时创建为独立 Worker。
 
-发送前请先按 [AGENTTEAMS_RUNBOOK.md](AGENTTEAMS_RUNBOOK.md) 确认 Worker 可访问的工具网关地址，然后把所有 `http://172.18.0.4:18089` 替换为该地址，例如：
-
-```text
-http://172.18.0.1:18089
-```
+所有工具网关地址已预设为 `http://host.docker.internal:18089`（macOS Docker Desktop 容器访问宿主机服务的标准方式），无需手动替换。
 
 统一工具调用协议：
 
 ```text
-POST http://172.18.0.4:18089/tools/{scenario_id}/{tool_name}.{function_name}
+POST http://host.docker.internal:18089/tools/{scenario_id}/{tool_name}.{function_name}
 Content-Type: application/json
 ```
 
@@ -30,7 +26,7 @@ Content-Type: application/json
 7. 必须等 8 个业务 Worker 全部创建完成并确认正常运行后，才允许创建 carsales-demo Team。
 8. Worker 初始化可能拉起容器运行时并写入依赖；并行创建会造成高 I/O 消耗，低规格机器可能因此阻塞，所以不要为了提速而并行执行。
 9. 8 个业务 Worker 的 AgentSpec、Skill、工具契约都在本消息中内联，不依赖 Worker 读取宿主机目录中的文件。
-10. 所有工具数据都通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
+10. 所有工具数据都通过 HTTP mock 工具网关获取，基础地址为 http://host.docker.internal:18089。
 11. 每个业务任务都会携带 scenario_id（如 family_suv_deal），工具调用必须使用该 scenario_id 访问对应场景数据。
 12. LLM 推理超时应对：如果 Worker 在推理过程中遇到超时（900 秒无输出），必须先输出已完成的工具调用结果和中间状态，不要等待完整推理完成。每个 Worker 的 AgentSpec 中已包含具体的超时应对指令。
 13. 任务路由（deal_type）：每个业务任务携带线索标签 deal_type（new_deal / finance / trade_in / complaint，模拟 CRM 打标）。TeamLeader 必须先提取 deal_type 再按对应路径调度：new_deal 走完整主链；finance 跳过 lead-intake 直接画像后金融；trade_in 跳过 lead-intake 直达画像记忆召回；complaint 不进主链直接转人工交接。
@@ -38,7 +34,7 @@ Content-Type: application/json
 15. 门店枚举映射：任务文本中的门店名对应标准 store_id（杭州滨江旗舰店/滨江店/HZ-BINJIANG -> store_001；上海虹桥店/虹桥店 -> store_002；广州天河店/天河店 -> store_003）。Worker 调用 check_stock / list_slots / book_slot / reserve_car 时必须传入标准 store_id，禁止直接使用门店中文名或自行猜测。
 
 统一工具调用协议：
-POST http://172.18.0.4:18089/tools/{scenario_id}/{tool_name}.{function_name}
+POST http://host.docker.internal:18089/tools/{scenario_id}/{tool_name}.{function_name}
 Content-Type: application/json
 
 ============================================================
@@ -67,11 +63,11 @@ skills:
 - lead-fusion: 按客户 ID、时间窗口与需求主题合并多渠道会话，识别重复线索。
 - profile-building: 从会话文本提取画像字段作为画像构建输入。
 tool contracts:
-- mock_crm.list_sessions: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.list_sessions body {}
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
-- mock_crm.update_lead_stage: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
-- mock_wechat.get_session: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_wechat.get_session body {"customer_id":""}
-- mock_knowledge.search_sop: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
+- mock_crm.list_sessions: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.list_sessions body {}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_crm.update_lead_stage: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
+- mock_wechat.get_session: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_wechat.get_session body {"customer_id":""}
+- mock_knowledge.search_sop: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
 output contract:
 {
   "lead_id": "",
@@ -109,9 +105,9 @@ skills:
 - profile-building: 从结构化与非结构化信息构建画像字段，输出置信度与 data_gaps。
 - deal-memory: 检索历史成交案例与相似客户画像，补充画像推断依据。
 tool contracts:
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
-- mock_crm.get_customer_history: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_customer_history body {"customer_id":null}
-- mock_knowledge.search_case: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_crm.get_customer_history: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_customer_history body {"customer_id":null}
+- mock_knowledge.search_case: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
 output contract:
 {
   "lead_id": "",
@@ -151,8 +147,8 @@ skills:
 - intent-scoring: 按信号字典打分（预算明确 +2、提到试驾 +2、价格异议 +1、时间约束 +2、仅资讯 -1），输出意向度与分级。
 - deal-memory: 对照历史相似客户成交前信号校准分级。
 tool contracts:
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
-- mock_knowledge.search_sop: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_knowledge.search_sop: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
 output contract:
 {
   "lead_id": "",
@@ -191,13 +187,13 @@ skills:
 - quote-pricing: 在政策范围内生成标准报价，识别超出授权的优惠需求。
 - deal-memory: 检索相似成交案例，参考成功路径与话术。
 tool contracts:
-- mock_inventory.list_models: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_inventory.list_models body {}
-- mock_inventory.check_stock: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_inventory.check_stock body {"model_code":"","store_id":""}
-- mock_price.get_policy: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.get_policy body {}
-- mock_price.calc_quote: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
-- mock_knowledge.search_product: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_product body {"query":null}
-- mock_knowledge.search_case: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_inventory.list_models: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_inventory.list_models body {}
+- mock_inventory.check_stock: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_inventory.check_stock body {"model_code":"","store_id":""}
+- mock_price.get_policy: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.get_policy body {}
+- mock_price.calc_quote: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
+- mock_knowledge.search_product: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_product body {"query":null}
+- mock_knowledge.search_case: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
 output contract:
 {
   "lead_id": "",
@@ -237,16 +233,16 @@ skills:
 - test-drive-booking: 查询档期并自动预约（L1 可逆动作）。
 - finance-plan: 金融方案对比生成；征信授权必须走 L2 审批。
 tool contracts:
-- mock_price.get_policy: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.get_policy body {}
-- mock_price.calc_quote: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
-- mock_price.apply_discount: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.apply_discount body {"quote_id":"","amount":0,"reason":""}
-- mock_finance.calc_plan: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_finance.calc_plan body {"price":0,"down_payment":0,"months":0}
-- mock_finance.submit_approval: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_finance.submit_approval body {"plan_id":"","customer_id":""}
-- mock_finance.check_approval: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_finance.check_approval body {"approval_id":""}
-- mock_testdrive.list_slots: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_testdrive.list_slots body {"store_id":"","model_code":""}
-- mock_testdrive.book_slot: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_testdrive.book_slot body {"customer_id":"","store_id":"","slot":"","model_code":""}
-- mock_testdrive.cancel_booking: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_testdrive.cancel_booking body {"booking_id":""}
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_price.get_policy: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.get_policy body {}
+- mock_price.calc_quote: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
+- mock_price.apply_discount: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.apply_discount body {"quote_id":"","amount":0,"reason":""}
+- mock_finance.calc_plan: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_finance.calc_plan body {"price":0,"down_payment":0,"months":0}
+- mock_finance.submit_approval: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_finance.submit_approval body {"plan_id":"","customer_id":""}
+- mock_finance.check_approval: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_finance.check_approval body {"approval_id":""}
+- mock_testdrive.list_slots: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_testdrive.list_slots body {"store_id":"","model_code":""}
+- mock_testdrive.book_slot: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_testdrive.book_slot body {"customer_id":"","store_id":"","slot":"","model_code":""}
+- mock_testdrive.cancel_booking: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_testdrive.cancel_booking body {"booking_id":""}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
 output contract:
 {
   "lead_id": "",
@@ -282,12 +278,12 @@ skills:
 - order-safe-execute: 订单创建幂等控制、状态机流转、回滚点管理、审批门槛判定。
 - deal-memory: 核对成交案例参考（交付周期承诺）。
 tool contracts:
-- mock_inventory.reserve_car: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_inventory.reserve_car body {"model_code":"","store_id":""}
-- mock_order.create_order: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_order.create_order body {"lead_id":"","quote_id":"","order_key":""}
-- mock_order.get_order: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_order.get_order body {"order_id":""}
-- mock_order.rollback_order: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_order.rollback_order body {"order_id":""}
-- mock_verify.check_deal: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_verify.check_deal body {"deal_id":""}
-- mock_price.calc_quote: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
+- mock_inventory.reserve_car: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_inventory.reserve_car body {"model_code":"","store_id":""}
+- mock_order.create_order: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_order.create_order body {"lead_id":"","quote_id":"","order_key":""}
+- mock_order.get_order: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_order.get_order body {"order_id":""}
+- mock_order.rollback_order: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_order.rollback_order body {"order_id":""}
+- mock_verify.check_deal: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_verify.check_deal body {"deal_id":""}
+- mock_price.calc_quote: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_price.calc_quote body {"model_code":"","customer_tier":""}
 output contract:
 {
   "lead_id": "",
@@ -324,13 +320,13 @@ skills:
 - deal-memory: 检索相似客户运营案例。
 - case-mining: 将运营效果好的触达策略沉淀为案例。
 tool contracts:
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
-- mock_crm.get_customer_history: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_customer_history body {"customer_id":null}
-- mock_crm.update_lead_stage: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
-- mock_wechat.get_session: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_wechat.get_session body {"customer_id":""}
-- mock_wechat.send_template_message: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_wechat.send_template_message body {"customer_id":"","template":"","params":{}}
-- mock_knowledge.search_sop: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
-- mock_knowledge.search_case: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_crm.get_customer_history: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_customer_history body {"customer_id":null}
+- mock_crm.update_lead_stage: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
+- mock_wechat.get_session: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_wechat.get_session body {"customer_id":""}
+- mock_wechat.send_template_message: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_wechat.send_template_message body {"customer_id":"","template":"","params":{}}
+- mock_knowledge.search_sop: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_sop body {"query":null}
+- mock_knowledge.search_case: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
 output contract:
 {
   "lead_id": "",
@@ -365,11 +361,11 @@ skills:
 - case-mining: 从报告与证据中提炼案例要素，判断增量价值，避免重复入库。
 - deal-memory: 检索既有案例，判断新案例增量价值。
 tool contracts:
-- mock_knowledge.search_case: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
-- mock_knowledge.search_product: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.search_product body {"query":null}
-- mock_knowledge.save_case: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_knowledge.save_case body {"case":{}}
-- mock_crm.get_lead: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
-- mock_crm.update_lead_stage: POST http://172.18.0.4:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
+- mock_knowledge.search_case: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_case body {"query":null}
+- mock_knowledge.search_product: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.search_product body {"query":null}
+- mock_knowledge.save_case: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_knowledge.save_case body {"case":{}}
+- mock_crm.get_lead: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.get_lead body {"lead_id":null}
+- mock_crm.update_lead_stage: POST http://host.docker.internal:18089/tools/{scenario_id}/mock_crm.update_lead_stage body {"lead_id":"","stage":""}
 output contract:
 {
   "case_id": "",
@@ -410,7 +406,7 @@ Team 创建要求：
 - 使用 AgentTeams 当前配置的真实 LLM 完成推理和协作。
 - manager 只负责创建和管理；销售任务由 carsales-demo 对应的 Team 房间接收，用户需要在消息开头 @<team_leader_name>，该 mention 应指向 carsales-demo-leader。
 - 8 个业务 Worker 的 AgentSpec、Skill、工具契约都已在本消息中内联，不依赖 Worker 读取宿主机文件。
-- 所有工具数据通过 HTTP mock 工具网关获取，基础地址为 http://172.18.0.4:18089。
+- 所有工具数据通过 HTTP mock 工具网关获取，基础地址为 http://host.docker.internal:18089。
 - 收到销售任务后，由 TeamLeader 按 deal_type 路由调度（按需调用，不需要 8 个全部参与）：
   - new_deal（DEAL-2001 全链路成交）：lead-intake -> profile-builder -> intent-analyst -> strategy-planner -> negotiation-executor -> order-executor（check_deal）-> 异步扇出 customer-ops + knowledge-miner -> 汇总报告。
   - finance（DEAL-2002 首购金融）：跳过 lead-intake，profile-builder -> intent-analyst -> strategy-planner -> negotiation-executor（金融方案 + 征信 L2 审批）-> order-executor（check_deal）-> 异步 knowledge-miner -> 汇总报告。

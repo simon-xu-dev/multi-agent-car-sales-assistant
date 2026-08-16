@@ -3,14 +3,18 @@ import HomePage from './components/HomePage'
 import Architecture from './components/Architecture'
 import ScenarioDemo from './components/ScenarioDemo'
 import AgentDetail from './components/AgentDetail'
+import AgentCollaboration from './components/AgentCollaboration'
+import LiveGateway from './components/LiveGateway'
 
 function App() {
   const [activeTab, setActiveTab] = useState('home')
 
   const tabs = [
     { id: 'home', label: '首页', icon: '🏠' },
+    { id: 'collab', label: 'Agent协同', icon: '🔗' },
     { id: 'architecture', label: '架构图', icon: '🏗️' },
     { id: 'scenario', label: '场景演示', icon: '🎬' },
+    { id: 'live', label: '实时网关', icon: '📡' },
     { id: 'agents', label: 'Agent详情', icon: '🤖' },
   ]
 
@@ -52,8 +56,10 @@ function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {activeTab === 'home' && <HomePage onNavigate={setActiveTab} />}
+        {activeTab === 'collab' && <AgentCollaboration />}
         {activeTab === 'architecture' && <Architecture />}
         {activeTab === 'scenario' && <ScenarioDemo />}
+        {activeTab === 'live' && <LiveGateway />}
         {activeTab === 'agents' && <AgentDetail />}
       </main>
     </div>

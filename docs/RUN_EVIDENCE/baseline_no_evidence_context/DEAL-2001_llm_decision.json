@@ -1,0 +1,32 @@
+{
+  "scenario_id": "family_suv_deal",
+  "deal_id": "DEAL-2001",
+  "decision_context": {
+    "scenario_id": "family_suv_deal",
+    "deal_type": "new_deal",
+    "customer_tier": "normal",
+    "model_code": "L7",
+    "price": 329800.0,
+    "quote_id": "QUOTE-FAMILY_SUV_DEAL-1",
+    "approval_type": "discount_override",
+    "approval_detail": "优惠金额 5000.0 让步原因「老客置换意向（超授权）」 报价单 QUOTE-FAMILY_SUV_DEAL-1",
+    "authorization_info": "优惠让步授权底线 3298.0，超出即需审批",
+    "memory_recall": "无（首单，无可复用历史经验）",
+    "order_id": "ORD-BE4828",
+    "order_status": "draft",
+    "approval_refs": [
+      "APR-2F2781"
+    ],
+    "deal_summary": "存在待人工审批的高风险动作（大额优惠 / 征信授权），成交挂起等待审批。 状态=pending_approval 待审1/通过0/驳回0"
+  },
+  "llm_decision": {
+    "decision": "pending",
+    "approver": "门店经理",
+    "reason": "优惠金额5000.0元超出授权底线3298.0元（超幅51.8%），让步原因为‘老客置换意向’但未提供任何老客身份凭证、历史订单号或置换车辆证明材料，支撑不足；且属首单无历史经验参考，存在合规与风控不确定性。",
+    "outcome": "human_handoff",
+    "decision_source": "llm",
+    "llm_model": "qwen-plus",
+    "raw_response": "{\n  \"decision\": \"pending\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"优惠金额5000.0元超出授权底线3298.0元（超幅51.8%），让步原因为‘老客置换意向’但未提供任何老客身份凭证、历史订单号或置换车辆证明材料，支撑不足；且属首单无历史经验参考，存在合规与风控不确定性。\",\n  \"outcome\": \"human_handoff\"\n}",
+    "scenario_id": "family_suv_deal"
+  }
+}

@@ -1,0 +1,11 @@
+hiclaw-worker-salesflow-demo-leader	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 16 hours	0.0.0.0:19292->8088/tcp, [::]:19292->8088/tcp
+hiclaw-worker-knowledge-miner	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:10476->8088/tcp, [::]:10476->8088/tcp
+hiclaw-worker-customer-ops	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:14710->8088/tcp, [::]:14710->8088/tcp
+hiclaw-worker-order-executor	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:19506->8088/tcp, [::]:19506->8088/tcp
+hiclaw-worker-negotiation-executor	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:15452->8088/tcp, [::]:15452->8088/tcp
+hiclaw-worker-strategy-planner	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:12972->8088/tcp, [::]:12972->8088/tcp
+hiclaw-worker-intent-analyst	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:15126->8088/tcp, [::]:15126->8088/tcp
+hiclaw-worker-profile-builder	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:13150->8088/tcp, [::]:13150->8088/tcp
+hiclaw-worker-lead-intake	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2	Up 17 hours	0.0.0.0:15539->8088/tcp, [::]:15539->8088/tcp
+hiclaw-manager	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-manager-copaw:v1.1.2	Up 17 hours	127.0.0.1:18888->18799/tcp
+hiclaw-controller	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-embedded:v1.1.2	Up 17 hours	127.0.0.1:18001->8001/tcp, 127.0.0.1:18080->8080/tcp, 127.0.0.1:18088->8088/tcp

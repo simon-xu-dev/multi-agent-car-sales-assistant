@@ -163,12 +163,61 @@ def scenario_trade_in_renewal() -> None:
     check("闭环验证 pending_approval", deal["status"] == "pending_approval")
 
 
+def scenario_approval_audit_loop() -> None:
+    """P2.3 安全审计闭环：approve/reject -> confirm/rollback -> audit_trail 端到端。"""
+    print("\n== approval_audit_loop: 审批决策 -> 回滚/确认 -> 审计轨迹 ==")
+
+    # ---- 路径 A：reject -> confirm 被门禁拦截 -> rollback -> 审计 ----
+    t = LocalMockTools("family_suv_deal")
+    q = t.calc_quote("L7", "gold")
+    d = t.apply_discount(q["quote_id"], 999999, "超授权让步")
+    check("超授权优惠生成 L2 审批", d["status"] == "needs_approval" and d["risk_level"] == "L2")
+    aid = d["approval_id"]
+    o = t.create_order("LEAD-1001", q["quote_id"], "KEY-AUDIT-SC")
+    check("订单快照关联 approval_refs", aid in o.get("approval_refs", []))
+    # 驳回（决策层只标记，不自动回滚）
+    rj = t.reject(aid, "门店经理-张伟", "让步超出底线")
+    check("审批驳回 pending->rejected", rj["status"] == "rejected")
+    check("驳回标记关联订单 rollback_requested", o["order_id"] in rj["affected_orders"])
+    # 门禁：驳回后 confirm 必须被拦截（高风险动作禁止默认放行）
+    cb = t.confirm_order(o["order_id"])
+    check("驳回后 confirm 被门禁拦截", cb["status"] == "blocked" and cb["blocked_reason"] == "rejected_approvals")
+    # 显式回滚（决策与执行分离）
+    rb = t.rollback_order(o["order_id"])
+    check("订单回滚 cancelled + 回滚点 draft", rb["status"] == "cancelled" and rb["rollback_point"] == "draft")
+    # 幂等：重复 reject 返回当前状态，不二次变更
+    rj2 = t.reject(aid, "另一经理", "重复")
+    check("重复驳回幂等", rj2["status"] == "rejected" and "不可重复决策" in rj2["message"])
+    # 审计轨迹
+    at = t.audit_trail()
+    names = [a["name"] for a in at]
+    check("审计轨迹含驳回+回滚", "reject_approval" in names and "rollback_order" in names)
+    af = t.audit_trail(approval_id=aid)
+    check("审计轨迹按 approval_id 筛选", all(a.get("approval_id") == aid for a in af) and len(af) >= 1)
+    cd = t.check_deal("DEAL-AUDIT-SC")
+    check("闭环验证 rolled_back", cd["status"] == "rolled_back" and cd["approvals_rejected"] == 1)
+
+    # ---- 路径 B：approve -> confirm -> won ----
+    t2 = LocalMockTools("family_suv_deal")
+    q2 = t2.calc_quote("L7", "gold")
+    d2 = t2.apply_discount(q2["quote_id"], 999999, "超授权")
+    aid2 = d2["approval_id"]
+    o2 = t2.create_order("LEAD-1001", q2["quote_id"], "KEY-AUDIT-SC2")
+    ap = t2.approve(aid2, "门店经理-李敏", "符合底线")
+    check("审批通过 pending->approved", ap["status"] == "approved")
+    cf = t2.confirm_order(o2["order_id"])
+    check("通过后订单确认 confirmed", cf["status"] == "confirmed")
+    cd2 = t2.check_deal("DEAL-AUDIT-SC2")
+    check("闭环验证 won", cd2["status"] == "won" and cd2["approvals_approved"] == 1)
+
+
 def main() -> None:
     global PASS, FAIL
     print(f"Scenarios available: {list_scenarios()}")
     scenario_family_suv()
     scenario_first_car_finance()
     scenario_trade_in_renewal()
+    scenario_approval_audit_loop()
     print(f"\n===== RESULT: {PASS} passed, {FAIL} failed =====")
     sys.exit(1 if FAIL else 0)
 

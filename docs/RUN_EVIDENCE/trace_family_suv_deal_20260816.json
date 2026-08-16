@@ -1,0 +1,985 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "time": "2026-08-16T09:40:31+0800",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"website\", \"customer_id\": \"CUST-2001\", \"owner\": \"官网在线咨询\", \"text\": \"家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？\", \"time\": \"09:40\"}, {\"channel\":...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "9a504afe4c154c57",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.list_sessions"
+      },
+      "duration_ms": 0.12
+    },
+    {
+      "time": "2026-08-16T09:40:36+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "CUST-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "a3de71ba617440e5",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.28
+    },
+    {
+      "time": "2026-08-16T09:40:39+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2002"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "83276e55755644f5",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.08
+    },
+    {
+      "time": "2026-08-16T09:40:47+0800",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "家庭SUV 六座 新能源 预算25万"
+      },
+      "result_preview": "[{\"match_terms\": [\"政策\", \"补贴\", \"新能源\"], \"summary\": \"当前新能源车型享受购置税减免与厂家置换补贴，补贴额度以车型目录为准。\", \"tags\": [\"政策\", \"新能源\", \"补贴\", \"置换\"], \"title\": \"新能源购车政策\"}, {\"match_terms\": [\"SOP\", \"家庭\", \"试驾\"...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "fb144ed61d0c487f",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 7.5
+    },
+    {
+      "time": "2026-08-16T09:40:51+0800",
+      "tool": "mock_crm.update_lead_stage",
+      "args": {
+        "lead_id": "LEAD-2001",
+        "stage": "qualified"
+      },
+      "result_preview": "{\"lead_id\": \"LEAD-2001\", \"message\": \"Lead stage updated to qualified.\", \"stage\": \"qualified\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "b16db288b34e4227",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.update_lead_stage"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T09:44:22+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "5215cc9c2e964dc4",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 1.07
+    },
+    {
+      "time": "2026-08-16T09:44:25+0800",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": null
+      },
+      "result_preview": "[{\"detail\": \"对比过问界 M7 与理想 L7 的参数与口碑。\", \"event\": \"官网车型对比\", \"time\": \"2025-06-10\"}, {\"detail\": \"到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。\", \"event\": \"门店到访\", \"time\": \"2025-07-02\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "a65d507bb2f44341",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 0.11
+    },
+    {
+      "time": "2026-08-16T09:44:28+0800",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "二孩家庭 大空间SUV 六座 新能源"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\", \"信号\", \"跟进\", \"二胎\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "2b2a1d035833440f",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 1.64
+    },
+    {
+      "time": "2026-08-16T09:44:30+0800",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "预算25万 新能源 SUV 安全配置"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\", \"信号\", \"跟进\", \"二胎\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "7f2252d9432941c9",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 4.75
+    },
+    {
+      "time": "2026-08-16T09:44:41+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "dd78e7b1dcf14fee",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.12
+    },
+    {
+      "time": "2026-08-16T09:44:44+0800",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "family suv purchase decision process"
+      },
+      "result_preview": "[{\"match_terms\": [\"政策\", \"补贴\", \"新能源\"], \"summary\": \"当前新能源车型享受购置税减免与厂家置换补贴，补贴额度以车型目录为准。\", \"tags\": [\"政策\", \"新能源\", \"补贴\", \"置换\"], \"title\": \"新能源购车政策\"}, {\"match_terms\": [\"SOP\", \"家庭\", \"试驾\"...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "8424b842746b4171",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 2.2
+    },
+    {
+      "time": "2026-08-16T10:59:35+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LD-2024-0001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "53babc60f7624f84",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 1.02
+    },
+    {
+      "time": "2026-08-16T10:59:38+0800",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "[{\"detail\": \"对比过问界 M7 与理想 L7 的参数与口碑。\", \"event\": \"官网车型对比\", \"time\": \"2025-06-10\"}, {\"detail\": \"到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。\", \"event\": \"门店到访\", \"time\": \"2025-07-02\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "1573dbeb2205477c",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 0.08
+    },
+    {
+      "time": "2026-08-16T10:59:41+0800",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "二胎家庭 大空间SUV 25万 六座"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\", \"信号\", \"跟进\", \"二胎\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "19e6ea3f581b4fc4",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 5.99
+    },
+    {
+      "time": "2026-08-16T11:02:01+0800",
+      "tool": "mock_crm.list_sessions",
+      "args": {},
+      "result_preview": "[{\"channel\": \"website\", \"customer_id\": \"CUST-2001\", \"owner\": \"官网在线咨询\", \"text\": \"家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？\", \"time\": \"09:40\"}, {\"channel\":...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "3c2ef8dba0d6401e",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.list_sessions"
+      },
+      "duration_ms": 0.34
+    },
+    {
+      "time": "2026-08-16T11:02:03+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": null
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "38b3d3fee8a64a01",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 5.26
+    },
+    {
+      "time": "2026-08-16T11:02:06+0800",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "新能源 SUV 家庭二宝 六座 试驾预约"
+      },
+      "result_preview": "[{\"match_terms\": [\"SOP\", \"家庭\", \"试驾\", \"流程\", \"新能源\", \"六座\", \"意向\", \"评分\", \"BANT\", \"跟进\"], \"summary\": \"1) 先确认家庭结构与用车场景；2) 推荐 2-3 款候选并对比安全/空间配置；3) 主动安排试驾预约；4) 报价后说明补贴与优惠构成；5) 超授权优惠必须申请审批...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "8c8d31ea9d834008",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 2.68
+    },
+    {
+      "time": "2026-08-16T11:02:09+0800",
+      "tool": "mock_wechat.get_session",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2001\", \"sessions\": [{\"channel\": \"wechat\", \"customer_id\": \"CUST-2001\", \"owner\": \"企业微信\", \"text\": \"销售顾问：请问您对六座还是七座有要求？客户：五座以上都行，最好是六座，父母偶尔一起出门。\", \"time\": \"10:...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "e24bf353846e428b",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.get_session"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T11:02:33+0800",
+      "tool": "mock_crm.update_lead_stage",
+      "args": {
+        "lead_id": "LEAD-2001",
+        "stage": "qualified"
+      },
+      "result_preview": "{\"lead_id\": \"LEAD-2001\", \"message\": \"Lead stage updated to qualified.\", \"stage\": \"qualified\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "98394121ea3942d2",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.update_lead_stage"
+      },
+      "duration_ms": 0.36
+    },
+    {
+      "time": "2026-08-16T11:11:43+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "8ae68183c21b48bd",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.38
+    },
+    {
+      "time": "2026-08-16T11:11:46+0800",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "[{\"detail\": \"对比过问界 M7 与理想 L7 的参数与口碑。\", \"event\": \"官网车型对比\", \"time\": \"2025-06-10\"}, {\"detail\": \"到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。\", \"event\": \"门店到访\", \"time\": \"2025-07-02\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "60b2faea092c46d2",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T11:11:49+0800",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "二胎家庭 大空间SUV 25万 六座 新能源"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\", \"信号\", \"跟进\", \"二胎\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "41795a79e8024112",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 2.06
+    },
+    {
+      "time": "2026-08-16T11:14:46+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "ff53414c61f54f21",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.12
+    },
+    {
+      "time": "2026-08-16T11:14:50+0800",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "家庭购车 SOP 二胎 SUV 试驾"
+      },
+      "result_preview": "[{\"match_terms\": [\"SOP\", \"家庭\", \"试驾\", \"流程\", \"新能源\", \"六座\", \"意向\", \"评分\", \"BANT\", \"跟进\"], \"summary\": \"1) 先确认家庭结构与用车场景；2) 推荐 2-3 款候选并对比安全/空间配置；3) 主动安排试驾预约；4) 报价后说明补贴与优惠构成；5) 超授权优惠必须申请审批...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "8422876a3917445e",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 3.82
+    },
+    {
+      "time": "2026-08-16T11:18:11+0800",
+      "tool": "mock_inventory.list_models",
+      "args": {},
+      "result_preview": "[{\"category\": \"中大型增程 SUV\", \"code\": \"L7\", \"guide_price\": 329800, \"name\": \"理想 L7\", \"specs\": {\"family_features\": \"后排娱乐屏、儿童座椅接口齐全\", \"range_km\": 1100, \"safety\": \"L2+ 智驾，9 气囊\", \"seats...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "8c080618cfac427f",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.list_models"
+      },
+      "duration_ms": 0.14
+    },
+    {
+      "time": "2026-08-16T11:18:11+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "da4f2f5444164375",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.05
+    },
+    {
+      "time": "2026-08-16T11:18:19+0800",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "L7",
+        "store_id": "store_001"
+      },
+      "result_preview": "{\"available\": 3, \"enough_for_demo\": true, \"model_code\": \"L7\", \"model_name\": \"理想 L7\", \"store_id\": \"store_001\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "d2b3427da9134ab2",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 0.55
+    },
+    {
+      "time": "2026-08-16T11:18:19+0800",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "M7",
+        "store_id": "store_001"
+      },
+      "result_preview": "{\"available\": 2, \"enough_for_demo\": true, \"model_code\": \"M7\", \"model_name\": \"问界 M7\", \"store_id\": \"store_001\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "1dd1844e9efd418f",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T11:18:19+0800",
+      "tool": "mock_inventory.check_stock",
+      "args": {
+        "model_code": "TANG",
+        "store_id": "store_001"
+      },
+      "result_preview": "{\"available\": 5, \"enough_for_demo\": true, \"model_code\": \"TANG\", \"model_name\": \"比亚迪唐 DM-i\", \"store_id\": \"store_001\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "1f16d90bfe20415e",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 0.14
+    },
+    {
+      "time": "2026-08-16T11:18:19+0800",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.8, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "ce7336ba31234662",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.get_policy"
+      },
+      "duration_ms": 0.09
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 2638.4, \"customer_tier\": \"normal\", \"final_price\": 319161.6, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "56c32bd5bc644690",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 2.67
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 3298.0, \"customer_tier\": \"silver\", \"final_price\": 318502.0, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "5bfc9f4d60f14ea7",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.37
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "gold"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 4287.4, \"customer_tier\": \"gold\", \"final_price\": 317512.6, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 L7...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "746d8ef49198495f",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.07
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "M7",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1998.4, \"customer_tier\": \"normal\", \"final_price\": 241801.6, \"guide_price\": 249800.0, \"model_code\": \"M7\", \"model_name\": \"问界 ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "cc140d0625f04e96",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.3
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "TANG",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1438.4, \"customer_tier\": \"normal\", \"final_price\": 173361.6, \"guide_price\": 179800.0, \"model_code\": \"TANG\", \"model_name\": \"比...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "139e191729c64737",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.06
+    },
+    {
+      "time": "2026-08-16T11:18:29+0800",
+      "tool": "mock_knowledge.search_product",
+      "args": {
+        "query": "理想L7 六座 家庭 SUV"
+      },
+      "result_preview": "[{\"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\", \"新能源\", \"安全\", \"SUV\", \"家庭\"], \"summary\": \"中大型增程 SUV，六座布局，CLTC 综合续航 1100km，L2+ 智能驾驶，配备后排娱乐屏与双侧电动侧滑门。适合二胎家庭与多人出行。\", \"tags\": [\"L7\", \"理想\", \"增程...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "40b6d422d95c426b",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_product"
+      },
+      "duration_ms": 1.41
+    },
+    {
+      "time": "2026-08-16T16:34:18+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2001"
+      },
+      "result_preview": "{\"budget_hint\": \"25 万左右\", \"created_at\": \"09:40\", \"customer_id\": \"CUST-2001\", \"family_hint\": \"二胎家庭，需大空间 SUV\", \"lead_id\": \"LEAD-2001\", \"score\": 0.0, \"source\": \"website+wechat+phon...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "df5678e1ba084b52",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 1.88
+    },
+    {
+      "time": "2026-08-16T16:34:21+0800",
+      "tool": "mock_price.get_policy",
+      "args": {},
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.8, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "e4734e4a49914b2f",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.get_policy"
+      },
+      "duration_ms": 0.36
+    },
+    {
+      "time": "2026-08-16T16:34:24+0800",
+      "tool": "mock_testdrive.list_slots",
+      "args": {
+        "store_id": "store_001",
+        "model_code": "L7"
+      },
+      "result_preview": "[{\"model_code\": \"L7\", \"slot\": \"2026-08-08 14:00\", \"store_id\": \"store_001\"}, {\"model_code\": \"L7\", \"slot\": \"2026-08-09 10:30\", \"store_id\": \"store_001\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "81cdd01d5bcb442b",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_testdrive.list_slots"
+      },
+      "duration_ms": 0.81
+    },
+    {
+      "time": "2026-08-16T16:34:30+0800",
+      "tool": "mock_testdrive.list_slots",
+      "args": {
+        "store_id": "store_001",
+        "model_code": "M7"
+      },
+      "result_preview": "[{\"model_code\": \"M7\", \"slot\": \"2026-08-08 15:00\", \"store_id\": \"store_001\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "f5807b997a0c4215",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_testdrive.list_slots"
+      },
+      "duration_ms": 0.11
+    },
+    {
+      "time": "2026-08-16T16:34:38+0800",
+      "tool": "mock_testdrive.book_slot",
+      "args": {
+        "customer_id": "CUST-2001",
+        "store_id": "store_001",
+        "slot": "2026-08-09 10:30",
+        "model_code": "L7"
+      },
+      "result_preview": "{\"booking_id\": \"BK-5ECED8\", \"customer_id\": \"CUST-2001\", \"message\": \"试驾预约成功（L1 自动执行，可随时取消回滚）。\", \"model_code\": \"L7\", \"risk_level\": \"L1\", \"slot\": \"2026-08-09 10:30\", \"status\": \"boo...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "7ba401c8a89949ad",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_testdrive.book_slot"
+      },
+      "duration_ms": 0.42
+    },
+    {
+      "time": "2026-08-16T16:34:41+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 2638.4, \"customer_tier\": \"normal\", \"final_price\": 319161.6, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "a2ca8f4bf00149ea",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T16:34:44+0800",
+      "tool": "mock_finance.calc_plan",
+      "args": {
+        "price": 319161.6,
+        "down_payment": 95748.48,
+        "months": 36
+      },
+      "result_preview": "{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 95748.48, \"loan\": 223413.12, \"monthly_payment\": 6496.14, \"months\": 36, \"plan_id\": \"PLAN-0C257A\", \"product\": \"厂家低息金融\", \"total...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "6f091c7c082a4807",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.calc_plan"
+      },
+      "duration_ms": 0.6
+    },
+    {
+      "time": "2026-08-16T16:34:47+0800",
+      "tool": "mock_finance.submit_approval",
+      "args": {
+        "plan_id": "PLAN-0C257A",
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "{\"approval_id\": \"APR-B949CC\", \"message\": \"征信授权审批任务已创建（涉及个人数据，必须人工审批，审批记录留痕审计）。\", \"risk_level\": \"L2\", \"status\": \"created\", \"type\": \"credit_authorization\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "5b0fd3500cce4457",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.submit_approval"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T16:34:50+0800",
+      "tool": "mock_finance.check_approval",
+      "args": {
+        "approval_id": "APR-B949CC"
+      },
+      "result_preview": "{\"approval_id\": \"APR-B949CC\", \"customer_id\": \"CUST-2001\", \"plan_id\": \"PLAN-0C257A\", \"status\": \"pending\", \"type\": \"credit_authorization\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "4b1bf8298aec4866",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.check_approval"
+      },
+      "duration_ms": 0.07
+    },
+    {
+      "time": "2026-08-16T16:41:42+0800",
+      "tool": "mock_inventory.reserve_car",
+      "args": {
+        "model_code": "L7",
+        "store_id": "store_001"
+      },
+      "result_preview": "{\"action\": \"reserve_car\", \"message\": \"库存预留成功（L1 可逆动作，超时自动释放）。\", \"model_code\": \"L7\", \"reservation_id\": \"RES-ED0AD6\", \"status\": \"reserved\", \"store_id\": \"store_001\"}",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "bc189af94b4e42da",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.reserve_car"
+      },
+      "duration_ms": 0.23
+    },
+    {
+      "time": "2026-08-16T16:41:45+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "L7",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 2638.4, \"customer_tier\": \"normal\", \"final_price\": 319161.6, \"guide_price\": 329800.0, \"model_code\": \"L7\", \"model_name\": \"理想 ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "855a15474ec94e9b",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.12
+    },
+    {
+      "time": "2026-08-16T16:41:48+0800",
+      "tool": "mock_order.create_order",
+      "args": {
+        "lead_id": "LEAD-2001",
+        "quote_id": "QUOTE-FAMILY_SUV_DEAL-7",
+        "order_key": "ORDER-FAMILY_SUV_DEAL-20260816-06"
+      },
+      "result_preview": "{\"approval_refs\": [\"APR-B949CC\"], \"lead_id\": \"LEAD-2001\", \"message\": \"订单草稿已创建。合同与交付属于高风险动作，必须人工审批后进入 confirmed。\", \"order_id\": \"ORD-182DC2\", \"order_key\": \"ORDER-FAMILY_SUV_DEAL-2...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "a56a542ddb58419a",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_order.create_order"
+      },
+      "duration_ms": 1.06
+    },
+    {
+      "time": "2026-08-16T16:41:50+0800",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "[{\"detail\": \"对比过问界 M7 与理想 L7 的参数与口碑。\", \"event\": \"官网车型对比\", \"time\": \"2025-06-10\"}, {\"detail\": \"到访杭州滨江店，静态体验理想 L7 展车，对六座布局表示满意。\", \"event\": \"门店到访\", \"time\": \"2025-07-02\"}]",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "07e6abb7c2d54da4",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 0.16
+    },
+    {
+      "time": "2026-08-16T16:41:50+0800",
+      "tool": "mock_wechat.get_session",
+      "args": {
+        "customer_id": "CUST-2001"
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2001\", \"sessions\": [{\"channel\": \"wechat\", \"customer_id\": \"CUST-2001\", \"owner\": \"企业微信\", \"text\": \"销售顾问：请问您对六座还是七座有要求？客户：五座以上都行，最好是六座，父母偶尔一起出门。\", \"time\": \"10:...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "581acc5ac2c944c9",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.get_session"
+      },
+      "duration_ms": 0.22
+    },
+    {
+      "time": "2026-08-16T16:41:51+0800",
+      "tool": "mock_order.get_order",
+      "args": {
+        "order_id": "ORD-182DC2"
+      },
+      "result_preview": "{\"approval_refs\": [\"APR-B949CC\"], \"lead_id\": \"LEAD-2001\", \"message\": \"订单草稿已创建。合同与交付属于高风险动作，必须人工审批后进入 confirmed。\", \"order_id\": \"ORD-182DC2\", \"order_key\": \"ORDER-FAMILY_SUV_DEAL-2...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "ebd44af143ab4cd0",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_order.get_order"
+      },
+      "duration_ms": 0.14
+    },
+    {
+      "time": "2026-08-16T16:41:54+0800",
+      "tool": "mock_verify.check_deal",
+      "args": {
+        "deal_id": "APR-B949CC"
+      },
+      "result_preview": "{\"actions_executed\": 6, \"approvals\": [{\"approval_id\": \"APR-B949CC\", \"decided_by\": null, \"status\": \"pending\", \"type\": \"credit_authorization\"}], \"approvals_approved\": 0, \"approval...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "2a5acd360bd74396",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_verify.check_deal"
+      },
+      "duration_ms": 0.17
+    },
+    {
+      "time": "2026-08-16T16:41:55+0800",
+      "tool": "mock_knowledge.search_sop",
+      "args": {
+        "query": "客户满意度管理 售后关怀 交付后运营"
+      },
+      "result_preview": "[{\"match_terms\": [\"跟进\", \"意向\", \"评分\", \"信号\", \"nurture\"], \"summary\": \"1) 按购买信号评分（预算明确 +2、提到试驾 +2、价格异议 +1、时间约束 +2、仅资讯 -1）；2) P1/P2 客户 48 小时内跟进；3) 低意向客户标记 nurture 周期触达，不直接放弃；4) 评分需附信号...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "1db58a48a54c4944",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 5.89
+    },
+    {
+      "time": "2026-08-16T16:41:55+0800",
+      "tool": "mock_knowledge.search_case",
+      "args": {
+        "query": "二胎家庭 交付后运营 转介绍 满意度"
+      },
+      "result_preview": "[{\"match_terms\": [\"家庭\", \"SUV\", \"试驾\", \"成交\", \"置换\", \"信号\", \"跟进\", \"二胎\"], \"summary\": \"二胎家庭客户，预算 30 万内，需求六座大空间。通过对比理想 L7 与问界 M7 空间与安全配置，安排试驾后当天锁定理想 L7，成交价 31.2 万（含置换补贴），周期 5 天。关键动作：主动安...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "38036689c6294153",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 0.85
+    },
+    {
+      "time": "2026-08-16T16:43:17+0800",
+      "tool": "mock_wechat.send_template_message",
+      "args": {
+        "customer_id": "CUST-2001",
+        "template": "test_drive_follow_up",
+        "params": {
+          "customer_name": "客户",
+          "vehicle": "理想L7",
+          "booking_id": "BK-5ECED8",
+          "follow_up_time": "试驾后24小时内",
+          "dealer_name": "杭州滨江旗舰店"
+        }
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2001\", \"message\": \"企业微信模板消息已发送（标准话术模板，低风险自动执行）。\", \"params\": {\"booking_id\": \"BK-5ECED8\", \"customer_name\": \"客户\", \"dealer_name\": \"杭州滨江旗舰店\", \"follow_up_time\": ...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "452af068326c41c9",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.send_template_message"
+      },
+      "duration_ms": 0.25
+    },
+    {
+      "time": "2026-08-16T16:43:21+0800",
+      "tool": "mock_wechat.send_template_message",
+      "args": {
+        "customer_id": "CUST-2001",
+        "template": "delivery_care",
+        "params": {
+          "customer_name": "客户",
+          "vehicle": "理想L7",
+          "dealer_name": "杭州滨江旗舰店",
+          "care_items": "儿童安全座椅安装指南、六座布局使用技巧、增程模式使用说明"
+        }
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2001\", \"message\": \"企业微信模板消息已发送（标准话术模板，低风险自动执行）。\", \"params\": {\"care_items\": \"儿童安全座椅安装指南、六座布局使用技巧、增程模式使用说明\", \"customer_name\": \"客户\", \"dealer_name\": \"杭州滨江旗舰店\",...",
+      "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+      "span_id": "c7a3d42876464571",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.send_template_message"
+      },
+      "duration_ms": 0.11
+    }
+  ]
+}

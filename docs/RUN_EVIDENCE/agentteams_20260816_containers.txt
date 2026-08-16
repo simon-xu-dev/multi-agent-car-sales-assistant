@@ -1,0 +1,11 @@
+hiclaw-worker-knowledge-miner	Up 8 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-customer-ops	Up 8 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-order-executor	Up 8 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-negotiation-executor	Up 8 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-strategy-planner	Up About an hour	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-intent-analyst	Up 21 minutes	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-profile-builder	Up 8 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-lead-intake	Up 2 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-worker-carsales-demo-leader	Up 30 minutes	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-copaw-worker:v1.1.2
+hiclaw-manager	Up 9 hours	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-manager-copaw:v1.1.2
+hiclaw-controller	Up 2 days	higress-registry.cn-hangzhou.cr.aliyuncs.com/higress/hiclaw-embedded:v1.1.2

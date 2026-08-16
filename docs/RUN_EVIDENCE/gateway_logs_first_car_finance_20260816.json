@@ -1,0 +1,71 @@
+{
+  "ok": true,
+  "trace_id": "f47bae29ba14407494cb072d1121ac73",
+  "result": [
+    {
+      "time": "2026-08-16T16:51:35+0800",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "",
+      "level": "INFO",
+      "event": "update_lead_stage",
+      "attributes": {
+        "risk_level": "L0",
+        "lead_id": "LEAD-2002",
+        "stage": "qualified"
+      }
+    },
+    {
+      "time": "2026-08-16T17:29:02+0800",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "",
+      "level": "WARN",
+      "event": "submit_credit_approval",
+      "attributes": {
+        "risk_level": "L2",
+        "plan_id": "PLAN-ACBF85",
+        "customer_id": "CUST-2002",
+        "approval_id": "APR-99ADBC"
+      }
+    },
+    {
+      "time": "2026-08-16T17:31:54+0800",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "",
+      "level": "INFO",
+      "event": "reserve_car",
+      "attributes": {
+        "risk_level": "L1",
+        "model_code": "QIN",
+        "store_id": "store_002"
+      }
+    },
+    {
+      "time": "2026-08-16T17:32:00+0800",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "",
+      "level": "WARN",
+      "event": "create_order",
+      "attributes": {
+        "risk_level": "L2",
+        "order_id": "ORD-DBA506",
+        "order_key": "ORDER-FIRST_CAR_FINANCE-20260816-06",
+        "quote_id": "QUOTE-FIRST_CAR_FINANCE-8",
+        "approval_refs": [
+          "APR-99ADBC"
+        ]
+      }
+    },
+    {
+      "time": "2026-08-16T17:43:50+0800",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "",
+      "level": "INFO",
+      "event": "send_template_message",
+      "attributes": {
+        "risk_level": "L1",
+        "customer_id": "CUST-2002",
+        "template": "credit_approval_update"
+      }
+    }
+  ]
+}

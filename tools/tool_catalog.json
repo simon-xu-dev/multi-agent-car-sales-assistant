@@ -24,8 +24,8 @@
     {
       "name": "mock_finance",
       "kind": "http-mock-adapter",
-      "functions": ["calc_plan", "submit_approval", "check_approval"],
-      "future_mcp_mapping": ["finance.plan.calc", "finance.approval.submit", "finance.approval.query"]
+      "functions": ["calc_plan", "submit_approval", "check_approval", "approve", "reject"],
+      "future_mcp_mapping": ["finance.plan.calc", "finance.approval.submit", "finance.approval.query", "finance.approval.approve", "finance.approval.reject"]
     },
     {
       "name": "mock_testdrive",
@@ -36,8 +36,8 @@
     {
       "name": "mock_order",
       "kind": "http-mock-adapter",
-      "functions": ["create_order", "get_order", "rollback_order"],
-      "future_mcp_mapping": ["order.create", "order.query", "order.rollback"]
+      "functions": ["create_order", "get_order", "rollback_order", "confirm_order"],
+      "future_mcp_mapping": ["order.create", "order.query", "order.rollback", "order.confirm"]
     },
     {
       "name": "mock_knowledge",
@@ -54,8 +54,8 @@
     {
       "name": "mock_verify",
       "kind": "http-mock-adapter",
-      "functions": ["check_deal"],
-      "future_mcp_mapping": ["deal.verify"]
+      "functions": ["check_deal", "audit_trail"],
+      "future_mcp_mapping": ["deal.verify", "deal.audit.query"]
     }
   ]
 }

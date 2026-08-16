@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "result": {
+    "tool_calls": 56,
+    "tool_success": 56,
+    "tool_failure": 0,
+    "by_tool": {
+      "mock_crm.list_sessions": 2,
+      "mock_crm.get_lead": 10,
+      "mock_knowledge.search_sop": 5,
+      "mock_crm.update_lead_stage": 2,
+      "mock_crm.get_customer_history": 4,
+      "mock_knowledge.search_case": 5,
+      "mock_wechat.get_session": 2,
+      "mock_inventory.list_models": 1,
+      "mock_inventory.check_stock": 3,
+      "mock_price.get_policy": 2,
+      "mock_price.calc_quote": 7,
+      "mock_knowledge.search_product": 1,
+      "mock_testdrive.list_slots": 2,
+      "mock_testdrive.book_slot": 1,
+      "mock_finance.calc_plan": 1,
+      "mock_finance.submit_approval": 1,
+      "mock_finance.check_approval": 1,
+      "mock_inventory.reserve_car": 1,
+      "mock_order.create_order": 1,
+      "mock_order.get_order": 1,
+      "mock_verify.check_deal": 1,
+      "mock_wechat.send_template_message": 2
+    },
+    "by_kind": {
+      "tool": 45,
+      "rag": 11
+    },
+    "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+    "tool_success_rate": 1.0
+  }
+}

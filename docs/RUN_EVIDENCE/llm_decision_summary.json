@@ -1,0 +1,40 @@
+{
+  "total_scenarios": 3,
+  "decision_source": "llm",
+  "llm_model": "qwen-plus",
+  "scenarios": {
+    "family_suv_deal": {
+      "approval_decision": "reject",
+      "recommendation_fit": "high",
+      "recommendation_risk": "none",
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_inventory.check_stock",
+        "mock_price.get_policy",
+        "mock_price.calc_quote"
+      ]
+    },
+    "first_car_finance": {
+      "approval_decision": "approve",
+      "recommendation_fit": "high",
+      "recommendation_risk": "none",
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_price.get_policy",
+        "mock_inventory.check_stock",
+        "mock_price.calc_quote"
+      ]
+    },
+    "trade_in_renewal": {
+      "approval_decision": "pending",
+      "recommendation_fit": "high",
+      "recommendation_risk": "none",
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_inventory.check_stock",
+        "mock_price.get_policy",
+        "mock_price.calc_quote"
+      ]
+    }
+  }
+}

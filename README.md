@@ -10,7 +10,11 @@
 2. Worker 在 Docker 中也能通过 HTTP 工具网关主动取证，不依赖宿主机目录。
 3. 三个销售场景分三次独立处理，展示完整成交闭环、金融审批闭环与老客户运营闭环。
 4. 低风险动作（试驾预约、标准报价、模板消息）进入自动化执行语义；高风险动作（超授权优惠、征信授权、订单确认）只生成审批计划；议价触及底线停止让步并转人工。
-5. 全链路工具调用可观测：每次调用写入 Trace，支持回放与审计。
+5. 全链路工具调用可观测：每次调用写入 OTel-GenAI 风格 Span（trace_id/span_id/span_kind/status/duration_ms/parent_span_id）+ 结构化 Log + Metrics，W3C `traceparent` 传播 `trace_id`+`parent_span_id` 使工具 span 与 Agent span 同属一个 trace 树。
+6. 安全审计闭环：高风险动作（L2）禁止默认放行——`approve`/`reject` 决策驱动 `confirm_order`/`rollback_order`（决策与执行分离），`audit_trail` 全量留痕（append-only JSONL，trace_id 关联）；三安全分支端到端：驳回→回滚、通过→确认→成交、挂起→转人工。
+7. 可运行验证闭环：离线自检（56 项断言）+ LLM 自主决策演示（三个决策点）+ MCP Server（22 工具，迁移只需协议适配）+ Golden/Badcase 评估（13+7=1.0）+ OSS 证据归档 + TF-IDF RAG + Agent 记忆 + 浏览器实时网关面板，全部本地可复现。
+8. LLM 自主决策（三个决策点）：①TeamLeader 审批门禁由百炼 LLM 基于忠实业务上下文自主推理 approve/reject/pending；②strategy_planner 车型推荐由 LLM 自主评估匹配度 + 风险标记（DEAL-2002 诚实标 preference_mismatch）；③strategy_planner 工具调用顺序由 LLM 自主规划（DEAL-2003 LLM 把 get_policy 提前到 check_stock 之前，体现场景化编排）。`decision_source` 诚实标注 `llm`/`fallback_config`，无 key 仍 ALL PASS，reason/raw_response 留痕可回放——把「编排闭环」升级为「自主闭环」。
+9. OTel 真落地 + 官方用云 Skill 真集成：opentelemetry-sdk 1.27.0 重放导出 95 span（ConsoleSpanExporter + GenAI semconv：`gen_ai.system`/`agent.name`/`tool.name`/`request.model`）；OSS REST 签名已验证 + MinIO PUT/GET 往返成功（OSS v1 签名，有凭证真调、无凭证降级本地，`store_type` 诚实标注）；百炼=真阿里云模型服务集成。
 
 ## Demo 场景
 
@@ -36,17 +40,28 @@
 
 ## 目录结构
 
-```text
+```
 carsales-demo/
 ├── agents/            # 8 个业务 Agent 定义（评审材料，附录 A 模板）
-├── skills/            # 11 个可复用 Skill（评审材料，附录 B 模板）
-├── tools/             # HTTP mock 工具网关（8 个企业系统 + 验证探针）
-│   ├── mock_tools.py
-│   ├── mock_tool_server.py
-│   ├── tool_catalog.json     # 工具目录与 MCP 未来映射
-│   └── MCP_MAPPING.md        # 等价 MCP 集成契约
+├── skills/            # 11 个可复用 Skill + evidence-archive（OSS 官方用云 Skill 封装）
+├── tools/             # HTTP mock 工具网关 + 可观测 + MCP + 评估 + LLM 决策
+│   ├── mock_tools.py             # 业务逻辑 + TF-IDF RAG + OTel span/log/metrics + approve/reject/confirm/audit
+│   ├── mock_tool_server.py        # HTTP 网关（traceparent 传播 + /trace /logs /metrics /audit /archive）
+│   ├── mcp_server.py             # FastMCP stdio Server（22 工具，复用 LocalMockTools）
+│   ├── mcp_client_test.py        # MCP 端到端验证（9 断言）
+│   ├── llm_decision_demo.py     # LLM 自主决策能力独立演示（三个决策点，基于真实 AgentTeams 场景数据）
+│   ├── llm_client.py             # 百炼 LLM 决策客户端（审批门禁 + 车型推荐 + 工具调用顺序三个决策点 + .env 加载 + 降级）
+│   ├── eval_harness.py           # Golden/Badcase 评估 + LLM-as-Judge 模板
+│   ├── evidence_archive.py       # OSS 真调用证据归档 Skill（OssObjectStore 真 REST + LocalObjectStore 降级）
+│   ├── otel_exporter.py           # OTel 真落地：hand-written span → opentelemetry-sdk 真导出 + GenAI semconv
+│   ├── rag_regression_replay.py  # 真实 Trace RAG 空结果回归重放
+│   ├── selfcheck.py              # 离线自检（56 项断言，含审计闭环）
+│   ├── tool_catalog.json         # 工具目录与 MCP 映射
+│   └── MCP_MAPPING.md            # 等价 MCP 集成契约
+├── demo/              # React 前端 Demo（实时网关面板）
+│   └── src/ components/LiveGateway.jsx, lib/gatewayClient.js, data/liveScripts.js
 ├── scenarios/         # 3 个销售场景数据（含预期结果）
-├── at/                # AgentTeams 编排层
+├── at/                # AgentTeams 协同层
 │   ├── create_agents_messages.md   # 8 Worker + Team 完整创建消息
 │   ├── team_spec.json              # Team 拓扑与工作流
 │   ├── run_demo_task_message.md    # 3 个销售任务消息
@@ -54,56 +69,292 @@ carsales-demo/
 │   ├── agentteams.env.example
 │   ├── nacos_registry_mock.json    # AI 资源治理 mock
 │   └── AgentTeam.md                # Team 形态说明
-└── docs/              # 评审与演进文档
+└── docs/              # 评审与演进文档（EVIDENCE.md / OFFICIAL_SKILL_INTEGRATION.md / 方案详述.md）
 ```
 
-## 最短运行流程
+## 快速开始
 
-1. 启动 mock 工具网关：
+### 环境要求
+
+- Python 3.11+（核心业务零第三方依赖，纯标准库）
+- 可选：`pip install -r requirements.txt`（OTel 可观测 + MCP Server，未安装自动降级不影响运行）
+
+### 30 秒本地验证（零依赖，无 API Key）
+
+```bash
+cd <DEMO_DIR>
+
+# 1. 离线自检：56 项断言（3 场景 + 审计闭环）
+python3 tools/selfcheck.py
+# → RESULT: 56 passed, 0 failed
+
+# 2. LLM 自主决策演示：三个决策点（审批门禁 + 车型推荐 + 工具顺序）
+python3 tools/llm_decision_demo.py
+# → 3 场景三分支演示，decision_source=llm/fallback_config
+# → 生成 docs/RUN_EVIDENCE/llm_decision_*.json
+
+# 3. 评估闭环：Golden 13 + Badcase 7 = 1.0
+python3 tools/eval_harness.py
+# → Score: 1.0 (16 维度全 1.0)
+```
+
+> 无 API Key 时，三个 LLM 决策点自动降级 `decision_source=fallback_config`。
+
+### 可选：配置百炼 LLM（三个决策点自主推理）
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入 DASHSCOPE_API_KEY=sk-xxx
+python3 tools/llm_decision_demo.py
+# → decision_source=llm，三分支由 LLM 推理得出 + reason/raw_response 留痕
+python3 tools/eval_harness.py
+# → LLM-as-Judge online（产出评判 JSON）
+```
+
+### 可选：OTel 真落地（重放导出）
+
+```bash
+pip install opentelemetry-sdk opentelemetry-semantic-conventions
+
+# 重放导出：工具网关 hand-written span 重放为真 OTel SDK Span
+python3 tools/otel_exporter.py
+# → docs/RUN_EVIDENCE/otel_sdk_spans.jsonl（95 span，agent+tool+rag 全量）+ ConsoleSpanExporter
+```
+
+### 可选：浏览器实时网关面板
+
+```bash
+# 启动 mock 工具网关
+python3 tools/mock_tool_server.py --host 0.0.0.0 --port 18089 &
+
+# 启动前端
+cd demo && npm install && npm run dev
+# → 浏览器打开「实时网关」Tab，回放管线 + Trace/Logs/Metrics + 归档
+```
+
+### 可选：MCP Server 验证
+
+```bash
+pip install mcp
+python3 tools/mcp_client_test.py
+# → 9/9 通过，22 工具，证明迁移 MCP 只需协议适配
+```
+
+### AgentTeams 真框架运行（三个场景，需 Docker）
+
+以下为 AgentTeams v1.1.2 Docker 框架的完整运行流程，逐个跑完三个销售场景。
+
+#### 步骤 1：启动 Mock 工具网关
 
 ```bash
 cd <DEMO_DIR>
 python3 tools/mock_tool_server.py --host 0.0.0.0 --port 18089
 ```
 
-2. 安装 AgentTeams，并按安装器引导完成 LLM/API Key/端口/运行时配置：
+另开终端验证：
+
+```bash
+curl http://127.0.0.1:18089/health
+# → {"ok": true, ...}
+```
+
+#### 步骤 2：安装 AgentTeams
 
 ```bash
 bash <(curl -sSL https://higress.ai/hiclaw/install.sh)
 ```
 
-3. 找到 Docker 容器访问工具网关的地址：
+按安装器引导完成配置（关键项）：
+
+| 引导项 | 样例值 |
+| --- | --- |
+| 版本 | `v1.1.2` |
+| LLM | `qwen3.7-plus`（或可用模型） |
+| API 联通性 | **必须测试通过** |
+| Manager/Worker 运行时 | `qwenpow`（`copow`/`QwenPaw`） |
+| Element Web 端口 | 默认 `18088` |
+| Matrix E2EE | 建议禁用 |
+
+安装完成后检查：
 
 ```bash
-docker inspect -f '{{range .NetworkSettings.Networks}}{{println .Gateway}}{{end}}' hiclaw-manager
-docker exec -it hiclaw-manager curl http://<GATEWAY_IP>:18089/health
+docker ps | grep hiclaw
+# → 应看到 11 个容器（manager + 8 worker + element-web + minio + ...）
 ```
 
-如果 manager 容器名不是 `hiclaw-manager`，按运行手册第 4 步先确认实际容器名。
+打开 Element Web：`http://127.0.0.1:18088`
 
-4. 在 Element Web 打开 `manager` 房间，把 [at/create_agents_messages.md](at/create_agents_messages.md) 里的 `<MOCK_TOOL_BASE_URL>` 替换成 `http://<GATEWAY_IP>:18089` 后，将完整创建请求复制给 `manager`。创建请求已要求所有 Worker 使用 `qwenpow`（`copow`/`QwenPaw`）运行时，并由 `manager` 严格串行创建 8 个业务 Worker；创建 Team 时再生成独立 TeamLeader Worker `carsales-demo-leader`。
+#### 步骤 3：确定 Docker 容器可访问的工具网关地址
 
-5. 在 Element Web/Matrix 会话列表中找到名称以 `Team` 开头、对应 `carsales-demo` 的 Team 房间。进入房间后，在输入框先 `@<team_leader_name>` 选中带 leader 名字的成员，再把 [at/run_demo_task_message.md](at/run_demo_task_message.md) 中的第一个销售任务复制到这条 @ 消息里发送；等报告输出完成后，再用同样方式发送下一条。销售任务不要发给 `manager`。
+macOS Docker Desktop 中，容器访问宿主机服务需使用 `host.docker.internal`（而非 gateway IP `172.18.0.1`，后者是 VM 内部网桥，不等于宿主机）。
 
-6. 查看运行证据：
+验证：
 
 ```bash
+docker exec -it hiclaw-manager curl -s http://host.docker.internal:18089/health
+# → {"ok": true, "service": "carsales-mock-tool-gateway"}
+```
+
+`<MOCK_TOOL_BASE_URL>` = `http://host.docker.internal:18089`
+
+#### 步骤 4：创建 8 个 Agent + Team（一次性发送）
+
+打开 [at/create_agents_messages.md](at/create_agents_messages.md)，将**全部内容**复制到 Element Web 的 `manager` 房间发送一次即可。消息内已包含 8 个业务 Worker 和 1 个 Team 的完整定义，manager 会按顺序逐个创建。
+
+> 创建完成后，`manager` 会返回 Team 房间名称和 `team_leader_name`，记下来用于步骤 5。
+
+#### 步骤 5：逐个发送三个销售任务
+
+在 Element Web 会话列表中找到名称以 **`Team`** 开头、对应 `carsales-demo` 的 Team 房间。
+
+**发送流程**：
+
+1. 在 Team 房间输入框输入 `@<team_leader_name>`（选中 TeamLeader），然后粘贴任务内容发送
+2. **等待完成**：等前一个 DEAL 报告完整输出后，再发下一个。不要同时发多条
+
+> TeamLeader 会自动拆解任务并分配给对应的 Worker，Worker 之间通过 Team 房间协同工作，无需单独给每个 Agent 发消息。
+
+---
+
+**任务 1：DEAL-2001 — 二胎家庭 SUV 全链路成交**
+
+```text
+@<team_leader_name>
+
+请让你的 Team 处理一条新的销售线索。
+
+deal_id: DEAL-2001
+scenario_id: family_suv_deal
+deal_type: new_deal
+门店：杭州滨江旗舰店
+客户渠道：官网在线咨询 + 企业微信 + 电话
+
+客户咨询（09:40 官网）：
+家里刚有二宝，想换一辆大空间 SUV，预算 25 万左右，主要看新能源。平时带两个孩子自驾游比较多，安全配置要好。请问有什么推荐？
+
+补充信息（10:05 企业微信）：
+销售顾问问六座还是七座，客户回复五座以上都行，最好是六座，父母偶尔一起出门。
+补充信息（10:20 电话转写）：
+客户提到周末想去门店看实车，问试驾要不要预约。
+
+请开始处理这条销售线索，推进到可成交状态，并输出本次销售闭环报告。
+```
+
+预期结果：线索归并 → 画像（二胎/25-28万/六座）→ 车型推荐 → 试驾预约（L1自动）→ 报价（L1自动）→ 超授权优惠 L2 审批 → 订单草稿 → 案例沉淀
+
+---
+
+**任务 2：DEAL-2002 — 首购客户金融方案**（等 DEAL-2001 报告完成后再发）
+
+```text
+@<team_leader_name>
+
+请让你的 Team 处理一条新的销售线索。
+
+deal_id: DEAL-2002
+scenario_id: first_car_finance
+deal_type: finance
+门店：上海虹桥店
+客户渠道：抖音私信 + 电话
+
+客户咨询（14:05 抖音私信）：
+刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。
+
+补充信息（14:30 电话转写）：
+客户询问分期首付比例和月供，提到自己征信没问题、收入证明齐全，希望尽快锁定优惠。
+
+请开始处理这条销售线索，重点输出金融方案与审批路径，并输出本次销售闭环报告。
+```
+
+预期结果：画像（首购/12-15万/月供敏感）→ 金融方案对比（厂家低息 2.99% vs 银行 3.99%）→ 征信授权 L2 审批 → 订单草稿（审批前不确认）
+
+---
+
+**任务 3：DEAL-2003 — 老客户置换与售后运营**（等 DEAL-2002 报告完成后再发）
+
+```text
+@<team_leader_name>
+
+请让你的 Team 处理一条新的销售线索。
+
+deal_id: DEAL-2003
+scenario_id: trade_in_renewal
+deal_type: trade_in
+门店：广州天河店
+客户渠道：企业微信（老客户回访）+ 门店
+
+客户咨询（16:20 企业微信）：
+你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另外我 3 月份车险到期了，之前的售后权益还能用吗？
+
+补充信息（16:45 门店记录）：
+陈先生到店看中大型 SUV，提出旧车置换 + 要求 3 万元额外优惠。
+
+请开始处理这条销售线索，注意老客户权益与议价底线，并输出本次销售闭环报告。
+```
+
+预期结果：历史画像 RAG 召回 → 置换方案（旧车 9.8 万 + 补贴 1.2 万）→ 议价触底线转人工 → 售后权益模板发送（L1）→ 案例脱敏入库
+
+---
+
+#### 步骤 6：查看运行证据
+
+每个场景跑完后，查看可观测数据：
+
+```bash
+# Trace（工具调用链路）
 curl http://127.0.0.1:18089/tools/family_suv_deal/tools/trace
+curl http://127.0.0.1:18089/tools/first_car_finance/tools/trace
+curl http://127.0.0.1:18089/tools/trade_in_renewal/tools/trace
+
+# Log（决策/审批事件）
+curl http://127.0.0.1:18089/tools/family_suv_deal/logs
+
+# Metrics（调用统计）
+curl http://127.0.0.1:18089/tools/family_suv_deal/metrics
+
+# Audit（审计轨迹）
+curl http://127.0.0.1:18089/tools/family_suv_deal/audit
 ```
+
+> 如果 Agent 要求你人工提供车型/库存/政策信息，提醒它：「请通过已配置的 HTTP mock 工具网关主动查询，不要让我人工收集完整证据。」
+
+## 本地可运行验证（无需 AgentTeams）
+
+除上述 AgentTeams 真实运行外，以下能力均可在本地独立复现（纯 Python 标准库 + Node）：
+
+| 验证 | 命令 | 证据 |
+| --- | --- | --- |
+| 离线自检 | `python3 tools/selfcheck.py` | 56/56 断言通过（3 场景 + 审计闭环） |
+| LLM 自主决策演示 | `python3 tools/llm_decision_demo.py` | 三个 LLM 决策点（审批门禁 + 车型推荐 + 工具顺序）独立演示；`decision_source`=llm/fallback_config；三分支对齐（reject→rollback / approve→confirm / pending→human_handoff）；证据含完整上下文 + LLM 原始返回 |
+| OTel 真落地 | `python3 tools/otel_exporter.py` → `otel_sdk_spans.jsonl` | **重放 95 span**（工具网关 hand-written span → 真 OTel SDK 导出）；opentelemetry-sdk 1.27.0 + GenAI semconv（`gen_ai.system`/`agent.name`/`tool.name`/`request.model`） |
+| MCP Server | `python3 tools/mcp_client_test.py` | 9/9 通过，22 工具，证明迁移 MCP 只需协议适配 |
+| 评估闭环 | `python3 tools/eval_harness.py` | Golden 13/13 + Badcase 7/7，综合 1.0（16 维度全 1.0）+ LLM-as-Judge online |
+| 安全审计闭环 | `curl …/tools/{sid}/mock_finance.reject` → `/audit` | approve/reject→confirm/rollback→audit_trail 端到端，append-only 审计 JSONL |
+| 实时网关面板 | `python3 tools/mock_tool_server.py &` → `cd demo && npm run dev` | 浏览器「实时网关」Tab 回放管线 + Trace/Logs/Metrics + 归档 |
+| 证据归档（OSS 真调用） | `curl -X POST …/tools/family_suv_deal/archive -d '{"deal_id":"DEAL-2001"}'` | OssObjectStore 真阿里云 OSS REST（v1 签名），有凭证真调/无凭证降级本地，`store_type` 标注 |
+| **AgentTeams 真框架运行** | `docker ps \| grep hiclaw` → Matrix API 发任务 → 查 room transcript | **11 容器 v1.1.2 真 Docker 运行**（非概念映射）：**2026-08-16 一天内 3 场景全闭环**（24 节点 DAG 全绿 + 116 次工具调用 100% 成功 + 3 份 complete_project 报告），证据见 [docs/RUN_EVIDENCE/AGENTTEAMS_REAL_RUN_EVIDENCE_20260816.md](docs/RUN_EVIDENCE/AGENTTEAMS_REAL_RUN_EVIDENCE_20260816.md) |
+| **异常分支与自愈** | `tools/patch_mention_filter.py` + `tools/recover_*.sh` | 4 类真实运行故障（mention 过滤丢弃/假派发/LLM 超时/空回合）全部根因分析+代码级根治+回归验证，见 [docs/RUN_ISSUES_AND_SOLUTIONS.md](docs/RUN_ISSUES_AND_SOLUTIONS.md) |
+
+完整证据索引与复现步骤见 [docs/EVIDENCE.md](docs/EVIDENCE.md)。
 
 ## 后续替换点
 
-| 当前内容 | 后续替换方向 |
-| --- | --- |
-| HTTP mock 工具网关 | 真实 MCP Server 或 Higress MCP 代理 |
-| `scenarios/*.json` | 真实 CRM、DMS、价格、金融审批、知识库数据源 |
-| 8 个业务 Worker 的内联 AgentSpec/Skill | Nacos AI Registry 中的 Prompt、Skill、AgentSpec、AgentTeam Spec |
-| `skills/*/SKILL.md` 评审材料 | 发布到 Nacos AI Registry 或 AgentTeams Skill Registry，由 Worker 按版本/标签动态加载 |
-| mock 知识库检索 | PolarDB for PostgreSQL + pgvector 向量库实现 RAG |
-| 工具网关 Trace | LoongSuite / AgentScope Studio / AgentLoop 全链路可观测与评估 |
+| 当前内容 | 后续替换方向 | 迁移成本 |
+| --- | --- | --- |
+| HTTP mock 工具网关 | 真实 MCP Server 或 Higress MCP 代理 | 仅协议适配层（`mcp_server.py` 已实证 22 工具零业务重构） |
+| `scenarios/*.json` | 真实 CRM、DMS、价格、金融审批、知识库数据源 | 数据源适配，工具接口不变 |
+| 8 个业务 Worker 的内联 AgentSpec/Skill | Nacos AI Registry 中的 Prompt、Skill、AgentSpec、AgentTeam Spec | 注册发布，Spec 结构不变 |
+| `skills/*/SKILL.md` 评审材料 | 发布到 Nacos AI Registry 或 AgentTeams Skill Registry，由 Worker 按版本/标签动态加载 | 版本化加载，Skill 契约不变 |
+| TF-IDF RAG（纯 Python） | PolarDB for PostgreSQL + pgvector 向量库 | 替换 `TFIDFRagIndex.search` 为向量库查询，接口不变 |
+| Agent 记忆（JSONL + TF-IDF） | PolarDB 向量库 / 统一模型层长记忆 | 持久化替换，`recall_semantic` 接口不变 |
+| 工具网关 Trace + 审计 JSONL | LoongSuite / AgentScope Studio / AgentLoop 全链路可观测 | 语义已对齐 OTel GenAI，`otel_exporter.py` 已实证真 OTel SDK 导出，采集器替换 |
+| AgentTeams 真实 LLM 推理驱动 | 多模型路由 / 自部署模型 / 更强调度策略 | 编排契约与 trace 结构不变；**真框架已跑**（11 容器 v1.1.2 + Matrix + 2026-08-16 三场景全闭环，116 次工具调用 100% 成功）；三个 LLM 决策点已由百炼 LLM 自主驱动（`llm_client.py` + `llm_decision_demo.py`） |
+| LLM 决策点（百炼 qwen-plus，三个） | qwen-max / 自部署模型 / 多模型路由 | `LLM_MODEL` 环境变量切换，prompt 与降级逻辑不变 |
+| OSS 证据归档（真 REST + 本地降级） | MCP Server（oss_put/get/list tool）或阿里云 OSS SDK | OssObjectStore REST→MCP tool schema 适配，`store_type` 契约不变 |
 
 ## 开源与合规
 
-- 开源计划：demo 代码包（本仓库）以 Apache-2.0 协议开源（见根目录 LICENSE）；Skill 模板、MCP 接口契约、场景数据集（脱敏）同步开放复用。
+- 开源计划：demo 代码包（本仓库）以 Apache-2.0 协议开源（见根目录 LICENSE）；Skill 模板、MCP 接口契约（[docs/INTERFACE_CONTRACT.md](docs/INTERFACE_CONTRACT.md)）、场景数据集（脱敏）同步开放复用。
+- 架构总览：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)（分层架构图 + AgentTeams 映射 + Skill/MCP/RAG/可观测/审计闭环）。
 - 数据来源：场景数据为构造的演示数据，不包含真实客户个人信息；真实业务接入时需脱敏与授权。
-- 依赖披露：AgentTeams（Agent 协同）、Python 标准库（mock 网关）、外部 LLM API（运行时配置）。
+- 依赖披露：AgentTeams（Agent 协同）、Python 标准库（mock 网关 + LLM 决策，零第三方依赖）、外部 LLM API（运行时配置）。

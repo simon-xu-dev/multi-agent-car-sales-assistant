@@ -1,0 +1,232 @@
+{
+  "$schema": "Skill Registry for CarSales AgentTeams",
+  "registry_version": "1.0.0",
+  "last_updated": "2025-08-12",
+  "governance": {
+    "publish_gate": "FORMAL",
+    "review_required": true,
+    "rollback_strategy": "Nacos AI Registry 多版本灰度 + 秒级回滚",
+    "version_scheme": "semver"
+  },
+  "skills": [
+    {
+      "name": "lead-fusion",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "lead-intake",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_crm.list_sessions", "mock_crm.get_lead", "mock_crm.update_lead_stage", "mock_wechat.get_session"],
+      "depends_on_skills": [],
+      "downstream_skills": ["profile-building", "intent-scoring"],
+      "failure_handling": {
+        "missing_customer_id": "按联系方式+时间窗口启发式归并并标注置信度，不硬合并",
+        "dedup_ambiguity": "保留两条候选并转人工确认，不丢弃任何会话",
+        "tool_unavailable": "输出证据缺口+人工建议，不猜测数据"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "crm.lead.query"
+    },
+    {
+      "name": "profile-building",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "profile-builder",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_crm.get_lead", "mock_crm.get_customer_history", "mock_knowledge.search_case"],
+      "depends_on_skills": ["lead-fusion", "deal-memory"],
+      "downstream_skills": ["intent-scoring", "car-recommendation"],
+      "failure_handling": {
+        "no_history": "置信度上限 0.6，标注 data_gaps",
+        "conflict_info": "会话信息冲突转人工",
+        "rag_empty": "仅用目录基础信息，标注'知识不足'"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "crm.customer.profile"
+    },
+    {
+      "name": "intent-scoring",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "intent-analyst",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_crm.get_lead", "mock_knowledge.search_sop"],
+      "depends_on_skills": ["profile-building", "deal-memory"],
+      "downstream_skills": ["car-recommendation", "quote-pricing"],
+      "failure_handling": {
+        "insufficient_signals": "输出低置信度分级并建议补充采集",
+        "cannot_grade": "默认 nurture，不直接放弃"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "crm.intent.score"
+    },
+    {
+      "name": "car-recommendation",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "strategy-planner",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_inventory.list_models", "mock_inventory.check_stock", "mock_knowledge.search_product"],
+      "depends_on_skills": ["profile-building", "deal-memory"],
+      "downstream_skills": ["quote-pricing"],
+      "failure_handling": {
+        "kb_empty": "仅输出目录基础信息并标注'知识不足'",
+        "stock_unknown": "标注库存未知，不推荐无库存车型"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "inventory.recommend"
+    },
+    {
+      "name": "quote-pricing",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": ["strategy-planner", "negotiation-executor"],
+      "risk_level": "L1/L2",
+      "depends_on_tools": ["mock_price.get_policy", "mock_price.calc_quote", "mock_price.apply_discount"],
+      "depends_on_skills": ["car-recommendation", "deal-memory"],
+      "downstream_skills": ["negotiation-guard", "finance-plan", "order-safe-execute"],
+      "failure_handling": {
+        "policy_unavailable": "停止报价转人工",
+        "approval_create_fail": "重试一次后升级人工"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "exponential"},
+      "idempotent": true,
+      "mcp_mapping": "pricing.quote.create"
+    },
+    {
+      "name": "negotiation-guard",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "risk-control",
+      "owner_agent": "negotiation-executor",
+      "risk_level": "L1/L2/L3",
+      "depends_on_tools": ["mock_price.apply_discount"],
+      "depends_on_skills": ["quote-pricing"],
+      "downstream_skills": ["order-safe-execute"],
+      "failure_handling": {
+        "action_record_lost": "以 Trace/actions 重建，缺失暂停让步",
+        "approval_timeout": "按未批准处理"
+      },
+      "retry_policy": {"max_retries": 0, "backoff": "none"},
+      "idempotent": true,
+      "mcp_mapping": "pricing.discount.apply"
+    },
+    {
+      "name": "test-drive-booking",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "negotiation-executor",
+      "risk_level": "L1",
+      "depends_on_tools": ["mock_testdrive.list_slots", "mock_testdrive.book_slot", "mock_testdrive.cancel_booking", "mock_crm.update_lead_stage"],
+      "depends_on_skills": [],
+      "downstream_skills": [],
+      "failure_handling": {
+        "slot_full": "重试并推荐替代档期",
+        "booking_fail": "重试一次后输出人工预约建议"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "testdrive.slot.book"
+    },
+    {
+      "name": "finance-plan",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "custom-skill",
+      "owner_agent": "negotiation-executor",
+      "risk_level": "L1/L2",
+      "depends_on_tools": ["mock_finance.calc_plan", "mock_finance.submit_approval", "mock_finance.check_approval"],
+      "depends_on_skills": ["quote-pricing"],
+      "downstream_skills": ["order-safe-execute"],
+      "failure_handling": {
+        "approval_timeout": "按未批准处理",
+        "calc_error": "重算一次后仍异常输出估算区间转人工"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "exponential"},
+      "idempotent": true,
+      "mcp_mapping": "finance.plan.create"
+    },
+    {
+      "name": "order-safe-execute",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "risk-control",
+      "owner_agent": "order-executor",
+      "risk_level": "L1/L2/L3",
+      "depends_on_tools": ["mock_order.create_order", "mock_order.get_order", "mock_order.rollback_order", "mock_inventory.reserve_car", "mock_verify.check_deal"],
+      "depends_on_skills": ["quote-pricing", "negotiation-guard"],
+      "downstream_skills": ["case-mining"],
+      "failure_handling": {
+        "create_fail": "重试一次后挂起告警",
+        "reject_rollback": "回滚到 draft",
+        "rollback_fail": "标记异常转人工"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "exponential"},
+      "idempotent": true,
+      "mcp_mapping": "order.create"
+    },
+    {
+      "name": "case-mining",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "knowledge-pipeline",
+      "owner_agent": "knowledge-miner",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_knowledge.search_case", "mock_knowledge.save_case", "mock_crm.get_lead", "mock_crm.update_lead_stage"],
+      "depends_on_skills": ["deal-memory"],
+      "downstream_skills": [],
+      "failure_handling": {
+        "insufficient_evidence": "仅沉淀经验摘要",
+        "save_fail": "重试后告警保留草稿供人工"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": false,
+      "mcp_mapping": "knowledge.case.save"
+    },
+    {
+      "name": "deal-memory",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "rag-retrieval",
+      "owner_agent": "ALL",
+      "risk_level": "L0",
+      "depends_on_tools": ["mock_knowledge.search_case", "mock_crm.get_customer_history"],
+      "depends_on_skills": [],
+      "downstream_skills": ["profile-building", "intent-scoring", "car-recommendation", "quote-pricing", "case-mining"],
+      "failure_handling": {
+        "search_timeout": "降级为无记忆参考并标注",
+        "result_conflict": "按相关度排序并标注冲突项"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "none"},
+      "idempotent": true,
+      "mcp_mapping": "knowledge.memory.recall"
+    },
+    {
+      "name": "evidence-archive",
+      "version": "0.2.0",
+      "maturity": "demo",
+      "type": "official-cloud-skill",
+      "owner_agent": "ALL",
+      "risk_level": "L0",
+      "depends_on_tools": ["OSS REST API (PUT/GET/list)"],
+      "depends_on_skills": [],
+      "downstream_skills": [],
+      "failure_handling": {
+        "oss_unavailable": "降级到本地目录 + 告警，不阻塞主链",
+        "no_credentials": "store_type=local 诚实降级"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "exponential"},
+      "idempotent": true,
+      "mcp_mapping": "oss.object.put/get/list"
+    }
+  ]
+}

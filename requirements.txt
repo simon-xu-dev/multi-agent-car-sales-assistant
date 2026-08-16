@@ -1,0 +1,12 @@
+# CarSales 依赖说明
+# 核心业务（selfcheck.py / eval_harness.py / mock_tools.py / llm_client.py / llm_decision_demo.py）
+# 零第三方依赖——纯 Python 3.11+ 标准库（urllib / http.server / hashlib / hmac / json / re）
+
+# 可选：OTel 可观测（otel_exporter.py 运行时插桩 + 重放导出）
+# 未安装时自动降级为纯手写 span + 事后重放，不影响系统运行
+opentelemetry-sdk>=1.27.0
+opentelemetry-semantic-conventions>=0.48b0
+
+# 可选：MCP Server（mcp_server.py 标准 MCP 协议接入）
+# 未安装时 mock 工具网关仍可用（HTTP REST），不影响系统运行
+mcp>=1.0.0

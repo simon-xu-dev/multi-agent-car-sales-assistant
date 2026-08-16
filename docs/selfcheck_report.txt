@@ -1,8 +1,3 @@
-CarSales agentteams-demo 自检报告
-生成时间: 2026-08-04 16:01:52 CST
-运行环境: Python 3.13.9 @ Darwin 24.6.0 arm64
-复现命令: python3 tools/selfcheck.py
-================================================================
 Scenarios available: ['family_suv_deal', 'first_car_finance', 'trade_in_renewal']
 
 == family_suv_deal: 家庭 SUV 全链路成交 ==
@@ -28,6 +23,13 @@ Scenarios available: ['family_suv_deal', 'first_car_finance', 'trade_in_renewal'
   [PASS] 案例入库
   [PASS] 案例 RAG 检索命中
   [PASS] 工具调用 Trace 留痕
+  [PASS] RAG 长句产品检索命中（真实失败查询回归）
+  [PASS] RAG SOP 长句检索命中（含 BANT 信号词）
+  [PASS] RAG 成交信号检索命中
+  [PASS] RAG 跟进 SOP 检索命中
+  [PASS] RAG 案例长句检索命中
+  [PASS] 门店别名 HZ-BINJIANG 库存可查
+  [PASS] 门店中文名试驾档期可查
 
 == first_car_finance: 首购金融方案 ==
   [PASS] 车型目录 3 款
@@ -47,4 +49,19 @@ Scenarios available: ['family_suv_deal', 'first_car_finance', 'trade_in_renewal'
   [PASS] 售后模板消息 L1 发送
   [PASS] 闭环验证 pending_approval
 
-===== RESULT: 36 passed, 0 failed =====
+== approval_audit_loop: 审批决策 -> 回滚/确认 -> 审计轨迹 ==
+  [PASS] 超授权优惠生成 L2 审批
+  [PASS] 订单快照关联 approval_refs
+  [PASS] 审批驳回 pending->rejected
+  [PASS] 驳回标记关联订单 rollback_requested
+  [PASS] 驳回后 confirm 被门禁拦截
+  [PASS] 订单回滚 cancelled + 回滚点 draft
+  [PASS] 重复驳回幂等
+  [PASS] 审计轨迹含驳回+回滚
+  [PASS] 审计轨迹按 approval_id 筛选
+  [PASS] 闭环验证 rolled_back
+  [PASS] 审批通过 pending->approved
+  [PASS] 通过后订单确认 confirmed
+  [PASS] 闭环验证 won
+
+===== RESULT: 56 passed, 0 failed =====

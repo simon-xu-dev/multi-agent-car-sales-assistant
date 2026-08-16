@@ -1,0 +1,253 @@
+{
+  "replay_note": "把真实运行 Trace 中返回 [] 的 RAG 查询，通过修复后的加权 OR 检索重新执行。区分类别：matching_fixed=原 AND 匹配缺陷、现已命中；legitimate_empty=查询引用了本场景知识库不存在的实体，返回 [] 属正确行为；matching_bug_residual=KB 有相关内容仍空，属残留缺陷。",
+  "scenarios": [
+    {
+      "deal": "DEAL-2001",
+      "scenario_id": "family_suv_deal",
+      "trace_file": "docs/RUN_EVIDENCE/DEAL-2001_trace.json",
+      "empty_rag_in_trace": 9,
+      "matching_fixed": 9,
+      "legitimate_empty": 0,
+      "matching_bug_residual": 0,
+      "items": [
+        {
+          "tool": "mock_knowledge.search_product",
+          "query": "新能源六座SUV 25万",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "理想 L7 产品知识"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "二宝家庭 六座SUV 新能源 预算25万",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "2025-11 李女士家庭 SUV 成交案例",
+            "2025-08 赵先生预算敏感客户转化案例"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "家庭SUV 新能源 六座 试驾 意图评估 BANT",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "家庭购车客户 SOP",
+            "新能源购车政策"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "SUV 意向评分",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "线索跟进 SOP",
+            "家庭购车客户 SOP"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "客户意向评估",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "线索跟进 SOP",
+            "家庭购车客户 SOP"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "成交信号",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "线索跟进 SOP"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "跟进",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "线索跟进 SOP",
+            "家庭购车客户 SOP"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_product",
+          "query": "理想L7 六座 新能源 SUV 家庭",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "理想 L7 产品知识"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "家庭购车 二胎 SUV 试驾体验",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "2025-11 李女士家庭 SUV 成交案例"
+          ],
+          "category": "matching_fixed"
+        }
+      ]
+    },
+    {
+      "deal": "DEAL-2001(run1)",
+      "scenario_id": "family_suv_deal",
+      "trace_file": "docs/RUN_EVIDENCE/deal-2001-trace-run1.json",
+      "empty_rag_in_trace": 6,
+      "matching_fixed": 5,
+      "legitimate_empty": 1,
+      "matching_bug_residual": 0,
+      "items": [
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "家庭 SUV 新能源 六座 试驾预约",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "家庭购车客户 SOP",
+            "新能源购车政策"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "二胎家庭 大空间 SUV 预算25万",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "2025-11 李女士家庭 SUV 成交案例",
+            "2025-08 赵先生预算敏感客户转化案例"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "family SUV deal",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "2025-11 李女士家庭 SUV 成交案例"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_product",
+          "query": "理想L7 家庭SUV 六座",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "理想 L7 产品知识"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_product",
+          "query": "理想L7 问界M7 零跑C16 六座SUV",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "理想 L7 产品知识",
+            "问界 M7 产品知识"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_product",
+          "query": "零跑C16",
+          "before": "[]",
+          "after_hits": 0,
+          "after_titles": [],
+          "category": "legitimate_empty"
+        }
+      ]
+    },
+    {
+      "deal": "DEAL-2002",
+      "scenario_id": "first_car_finance",
+      "trace_file": "docs/RUN_EVIDENCE/DEAL-2002_trace_full.json",
+      "empty_rag_in_trace": 2,
+      "matching_fixed": 2,
+      "legitimate_empty": 0,
+      "matching_bug_residual": 0,
+      "items": [
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "首购分期购车 年轻人 低月供 预算12-15万",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "2025-09 张先生首购金融转化案例"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "首购客户 意图评估 跟进策略",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "首购客户金融方案 SOP"
+          ],
+          "category": "matching_fixed"
+        }
+      ]
+    },
+    {
+      "deal": "DEAL-2003",
+      "scenario_id": "trade_in_renewal",
+      "trace_file": "docs/RUN_EVIDENCE/DEAL-2003_trace.json",
+      "empty_rag_in_trace": 2,
+      "matching_fixed": 2,
+      "legitimate_empty": 0,
+      "matching_bug_residual": 0,
+      "items": [
+        {
+          "tool": "mock_knowledge.search_sop",
+          "query": "老客户置换政策 旧车评估 售后权益",
+          "before": "[]",
+          "after_hits": 2,
+          "after_titles": [
+            "售后权益政策",
+            "老客户置换 SOP"
+          ],
+          "category": "matching_fixed"
+        },
+        {
+          "tool": "mock_knowledge.search_case",
+          "query": "老客户置换升级 秦PLUS 中大型SUV 三年车龄 品牌忠诚",
+          "before": "[]",
+          "after_hits": 1,
+          "after_titles": [
+            "2025-07 孙先生老客户置换成交案例"
+          ],
+          "category": "matching_fixed"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_empty_rag_in_real_traces": 19,
+    "matching_fixed_by_weighted_or": 18,
+    "legitimate_empty_entity_absent_from_kb": 1,
+    "matching_bug_residual": 0,
+    "all_matching_bugs_fixed": true
+  }
+}

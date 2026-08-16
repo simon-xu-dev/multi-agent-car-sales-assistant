@@ -26,24 +26,25 @@ metadata:
 
 ## 依赖工具 / 系统
 
-- `mock_order.create_order` / `get_order` / `rollback_order`、`mock_inventory.reserve_car`、`mock_verify.check_deal`、`mock_price.calc_quote`。
-- 迁移 MCP 后对应 `order.*` / `dms.inventory.reserve`。
+- `mock_order.create_order` / `get_order` / `rollback_order` / `confirm_order`、`mock_inventory.reserve_car`、`mock_verify.check_deal` / `audit_trail`、`mock_price.calc_quote`、`mock_finance.approve` / `reject`。
+- 迁移 MCP 后对应 `order.*` / `dms.inventory.reserve` / `deal.audit.query` / `finance.approval.*`。
 
 ## Procedure
 
 1. 校验前置条件：报价单存在、审批项状态已知、幂等键生成（lead_id + quote_id 组合）。
-2. 创建订单草稿（create_order，L2）：幂等键保证重复调用返回同一订单，防止重复下单。
+2. 创建订单草稿（create_order，L2）：幂等键保证重复调用返回同一订单，防止重复下单；订单快照关联当前 pending 审批（approval_refs）。
 3. 高风险动作判定：合同确认、交付必须人工审批；审批前订单停留在 draft。
-4. 状态跟踪与回滚：get_order 查询状态；客户违约或审批驳回时 rollback_order 回滚到创建前状态（回滚点：draft）。
-5. 成交验证：调用 check_deal 汇总线索状态、订单、审批，输出闭环状态报告。
+4. 审批决策驱动状态流转：approve → confirm_order（门禁：所有关联审批 approved 且无 rejected 才放行 draft→confirmed）；reject → 标记关联订单 rollback_requested（决策层只标记）→ 显式 rollback_order 回滚到 draft（决策与执行分离）。
+5. 成交验证：调用 check_deal 汇总线索状态、订单、审批（pending/approved/rejected），输出闭环状态报告；调用 audit_trail 查询结构化审计轨迹（按 approval_id / order_id 可筛选）。
 
 ## Output Contract
 
 ```json
 {
-  "order": {"order_id": "ORD-...", "status": "draft", "risk_level": "L2", "order_key": "LEAD-2001|QUOTE-..."},
+  "order": {"order_id": "ORD-...", "status": "draft|confirmed|cancelled", "risk_level": "L2", "order_key": "LEAD-2001|QUOTE-...", "approval_refs": ["APR-..."]},
   "rollback_point": "draft",
-  "deal_verification": {"status": "pending_approval", "summary": "等待门店经理审批"},
+  "deal_verification": {"status": "pending_approval|won|rolled_back", "summary": "...", "approvals_pending": 0, "approvals_approved": 1, "approvals_rejected": 0},
+  "audit_trail": {"total": 6, "actions": [{"action_id": "ACT-...", "name": "approve|reject_approval|confirm_order|rollback_order", "risk_level": "L2", "time": "..."}]},
   "approval_required": true
 }
 ```
@@ -51,14 +52,16 @@ metadata:
 ## Quality Gates
 
 - 同一 order_key 绝不产生两个订单（幂等）。
-- 审批通过前订单状态只能是 draft / pending_approval。
-- 每次状态变更必须写入 actions 审计轨迹。
+- 审批通过前订单状态只能是 draft / pending_approval；confirm_order 门禁拒绝在存在 pending/rejected 审批时放行（高风险动作禁止默认放行）。
+- 每次状态变更（approve/reject/confirm/rollback）必须写入 actions 审计轨迹（action_id + risk_level + time + 关联业务键），并通过 trace_id 与 Trace 关联。
+- approve/reject 幂等——对已决策审批返回当前状态，不二次变更。
 
 ## 失败处理
 
 - 创建失败：重试一次，仍失败输出挂起状态并告警，保留人工干预入口。
-- 审批驳回：回滚到 draft 并通知 negotiation-executor 重新制定方案。
+- 审批驳回：reject 标记关联订单 rollback_requested（决策层）→ 显式 rollback_order 回滚到 draft（执行层）→ 通知 negotiation-executor 重新制定方案；决策与执行分离。
 - 回滚失败：标记异常订单，转人工处理，禁止静默。
+- 审批超时：按未批准处理（pending → human_handoff），禁止默认放行。
 
 ## 权限与安全
 

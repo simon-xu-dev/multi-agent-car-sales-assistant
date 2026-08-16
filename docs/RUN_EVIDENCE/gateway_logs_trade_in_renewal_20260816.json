@@ -1,0 +1,83 @@
+{
+  "ok": true,
+  "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+  "result": [
+    {
+      "time": "2026-08-16T17:51:26+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "INFO",
+      "event": "update_lead_stage",
+      "attributes": {
+        "risk_level": "L0",
+        "lead_id": "LEAD-2003",
+        "stage": "qualified"
+      }
+    },
+    {
+      "time": "2026-08-16T18:26:26+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "WARN",
+      "event": "apply_discount",
+      "attributes": {
+        "risk_level": "L2",
+        "quote_id": "QUOTE-TRADE_IN_RENEWAL-1",
+        "amount": 30000.0,
+        "approval_id": "APR-A3C8CD"
+      }
+    },
+    {
+      "time": "2026-08-16T18:28:59+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "INFO",
+      "event": "reserve_car",
+      "attributes": {
+        "risk_level": "L1",
+        "model_code": "TANG",
+        "store_id": "store_003"
+      }
+    },
+    {
+      "time": "2026-08-16T18:29:06+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "WARN",
+      "event": "create_order",
+      "attributes": {
+        "risk_level": "L2",
+        "order_id": "ORD-FACC8E",
+        "order_key": "ORDER-TRADE_IN_RENEWAL-20260816-06",
+        "quote_id": "QUOTE-TRADE_IN_RENEWAL-2",
+        "approval_refs": [
+          "APR-A3C8CD"
+        ]
+      }
+    },
+    {
+      "time": "2026-08-16T18:32:45+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "INFO",
+      "event": "send_template_message",
+      "attributes": {
+        "risk_level": "L1",
+        "customer_id": "CUST-2003",
+        "template": "trade_in_approval_update"
+      }
+    },
+    {
+      "time": "2026-08-16T18:32:45+0800",
+      "trace_id": "5c57fdb012e5403dbd5a9e8bebaa980c",
+      "span_id": "",
+      "level": "INFO",
+      "event": "send_template_message",
+      "attributes": {
+        "risk_level": "L1",
+        "customer_id": "CUST-2003",
+        "template": "benefit_continuation"
+      }
+    }
+  ]
+}

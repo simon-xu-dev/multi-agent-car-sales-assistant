@@ -1,0 +1,87 @@
+{
+  "scenario_id": "family_suv_deal",
+  "deal_id": "DEAL-2001",
+  "approval_gate": {
+    "context": {
+      "scenario_id": "family_suv_deal",
+      "deal_type": "new_deal",
+      "customer_tier": "normal",
+      "model_code": "L7",
+      "price": 329800,
+      "quote_id": "QUOTE-DEMO",
+      "approval_type": "discount_override",
+      "approval_detail": "优惠金额 50000 让步原因「老客置换意向（超授权让步）」",
+      "authorization_info": "优惠让步授权底线 1%（约 3298 元）",
+      "evidence_status": "客户为普通新客（CRM 无历史成交记录），让步理由「老客置换意向」与系统记录不符——老客身份不成立，超授权让步缺乏合理依据",
+      "memory_recall": "无（首单，无可复用历史经验）",
+      "order_id": "ORD-DEMO",
+      "order_status": "draft",
+      "approval_refs": [
+        "APR-DEMO"
+      ],
+      "deal_summary": "尚无可验证的执行动作，闭环未启动。 状态=in_progress 待审0/通过0/驳回0"
+    },
+    "outcome": {
+      "decision": "reject",
+      "approver": "门店经理",
+      "reason": "让步理由‘老客置换意向’与CRM系统记录矛盾（客户为无历史成交的普通新客），且优惠金额50000元远超授权底线（3298元），缺乏合规依据与资质匹配性。",
+      "outcome": "rollback",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"decision\": \"reject\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"让步理由‘老客置换意向’与CRM系统记录矛盾（客户为无历史成交的普通新客），且优惠金额50000元远超授权底线（3298元），缺乏合规依据与资质匹配性。\",\n  \"outcome\": \"rollback\"\n}",
+      "scenario_id": "family_suv_deal"
+    }
+  },
+  "recommendation_review": {
+    "context": {
+      "scenario_id": "family_suv_deal",
+      "deal_type": "new_deal",
+      "customer_tier": "normal",
+      "budget": "25-35 万",
+      "use_case": "家庭自驾游 / 日常通勤",
+      "preferences": "六座、空间、安全、新能源",
+      "intent_score": 78,
+      "intent_stage": "decision",
+      "priority": "P1",
+      "model_code": "L7",
+      "model_name": "理想 L7",
+      "guide_price": 329800,
+      "final_price": 318421.6,
+      "stock_ok": true,
+      "memory_recall": "无（首单，无可复用历史经验）"
+    },
+    "outcome": {
+      "recommendation_reason": "理想L7为增程式新能源六座中大型SUV，提供越级空间、全系标配NOA智驾与21项主动安全配置，完美契合客户对六座、家庭自驾游空间需求、安全性和新能源的四大核心偏好；最终报价31.84万元落在客户25–35万预算区间内，且低于指导价1.14万元，具备价格合理性。",
+      "fit_confidence": "high",
+      "risk_flag": "none",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"recommendation_reason\": \"理想L7为增程式新能源六座中大型SUV，提供越级空间、全系标配NOA智驾与21项主动安全配置，完美契合客户对六座、家庭自驾游空间需求、安全性和新能源的四大核心偏好；最终报价31.84万元落在客户25–35万预算区间内，且低于指导价1.14万元，具备价格合理性。\",\n  \"fit_confidence\": \"high\",\n  \"risk_flag\": \"none\"\n}",
+      "scenario_id": "family_suv_deal"
+    }
+  },
+  "tool_planning": {
+    "context": {
+      "scenario_id": "family_suv_deal",
+      "deal_type": "new_deal",
+      "customer_tier": "normal",
+      "model_code": "L7",
+      "budget": "25-35 万",
+      "intent_score": "78",
+      "intent_stage": "decision"
+    },
+    "outcome": {
+      "tool_order": [
+        "mock_inventory.list_models",
+        "mock_inventory.check_stock",
+        "mock_price.get_policy",
+        "mock_price.calc_quote"
+      ],
+      "planning_reason": "客户处于 decision 阶段且意向车型明确为L7，但需先确认L7是否在可售目录中（list_models）以规避型号停售或命名差异风险；确认存在后立即校验本地库存（check_stock）保障交付可行性；再获取最新价格政策（get_policy）支撑精准报价；最后调用calc_quote生成面向normal客群的正式报价单。",
+      "decision_source": "llm",
+      "llm_model": "qwen-plus",
+      "raw_response": "{\n  \"tool_order\": [\"mock_inventory.list_models\", \"mock_inventory.check_stock\", \"mock_price.get_policy\", \"mock_price.calc_quote\"],\n  \"planning_reason\": \"客户处于 decision 阶段且意向车型明确为L7，但需先确认L7是否在可售目录中（list_models）以规避型号停售或命名差异风险；确认存在后立即校验本地库存（check_stock）保障交付可行性；再获取最新价格政策（get_policy）支撑精准报价；最后调用calc_quote生成面向normal客群的正式报价单。\"\n}",
+      "scenario_id": "family_suv_deal"
+    }
+  }
+}

@@ -1,0 +1,272 @@
+{
+  "note": "Golden=系统应正确完成的闭环行为；Badcase=系统应拒绝/挂起/报错的风控守卫。指标回流用于调优 Skill/RAG/风控边界。",
+  "metrics": {
+    "golden_accuracy": 1.0,
+    "guard_precision": 1.0,
+    "overall": 1.0,
+    "golden_pass": 13,
+    "golden_total": 13,
+    "badcase_pass": 7,
+    "badcase_total": 7
+  },
+  "by_dimension": {
+    "线索归并": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "报价计算": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "风控授权": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "低风险自动": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "高风险审批": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "订单幂等": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "闭环验证": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "RAG召回": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "金融方案": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "征信审批门禁": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "历史记忆召回": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "议价底线守护": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "审批闭环": {
+      "pass": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "底线守护": {
+      "pass": 2,
+      "total": 2,
+      "rate": 1.0
+    },
+    "异常处理": {
+      "pass": 3,
+      "total": 3,
+      "rate": 1.0
+    },
+    "回滚审计": {
+      "pass": 2,
+      "total": 2,
+      "rate": 1.0
+    }
+  },
+  "cases": [
+    {
+      "id": "G01",
+      "type": "golden",
+      "dimension": "线索归并",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "3 渠道会话"
+    },
+    {
+      "id": "G02",
+      "type": "golden",
+      "dimension": "报价计算",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": 319161.6
+    },
+    {
+      "id": "G03",
+      "type": "golden",
+      "dimension": "风控授权",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": 1.0
+    },
+    {
+      "id": "G04",
+      "type": "golden",
+      "dimension": "低风险自动",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "试驾 L1 自动"
+    },
+    {
+      "id": "G05",
+      "type": "golden",
+      "dimension": "高风险审批",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "needs_approval/L2"
+    },
+    {
+      "id": "G06",
+      "type": "golden",
+      "dimension": "订单幂等",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "ORD-1348CA"
+    },
+    {
+      "id": "G07",
+      "type": "golden",
+      "dimension": "闭环验证",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "pending_approval"
+    },
+    {
+      "id": "G08",
+      "type": "golden",
+      "dimension": "RAG召回",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "2 条 SOP"
+    },
+    {
+      "id": "G09",
+      "type": "golden",
+      "dimension": "金融方案",
+      "scenario": "first_car_finance",
+      "passed": true,
+      "actual": "2 组方案"
+    },
+    {
+      "id": "G10",
+      "type": "golden",
+      "dimension": "征信审批门禁",
+      "scenario": "first_car_finance",
+      "passed": true,
+      "actual": "created/L2"
+    },
+    {
+      "id": "G11",
+      "type": "golden",
+      "dimension": "历史记忆召回",
+      "scenario": "trade_in_renewal",
+      "passed": true,
+      "actual": "4 条历史"
+    },
+    {
+      "id": "G12",
+      "type": "golden",
+      "dimension": "议价底线守护",
+      "scenario": "trade_in_renewal",
+      "passed": true,
+      "actual": "needs_approval/L2"
+    },
+    {
+      "id": "G13",
+      "type": "golden",
+      "dimension": "审批闭环",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "approve->approved confirm->confirmed"
+    },
+    {
+      "id": "B01",
+      "type": "badcase",
+      "dimension": "底线守护",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "needs_approval",
+      "desc": "巨额优惠不自动放行"
+    },
+    {
+      "id": "B02",
+      "type": "badcase",
+      "dimension": "底线守护",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "needs_approval",
+      "desc": "重复让步不放行"
+    },
+    {
+      "id": "B03",
+      "type": "badcase",
+      "dimension": "异常处理",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "正确报错",
+      "desc": "未知 quote 报错"
+    },
+    {
+      "id": "B04",
+      "type": "badcase",
+      "dimension": "异常处理",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "正确报错",
+      "desc": "未知车型报错"
+    },
+    {
+      "id": "B05",
+      "type": "badcase",
+      "dimension": "回滚审计",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "cancelled",
+      "desc": "回滚到 draft"
+    },
+    {
+      "id": "B06",
+      "type": "badcase",
+      "dimension": "异常处理",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "正确报错",
+      "desc": "无效档期报错"
+    },
+    {
+      "id": "B07",
+      "type": "badcase",
+      "dimension": "回滚审计",
+      "scenario": "family_suv_deal",
+      "passed": true,
+      "actual": "reject->rejected confirm->blocked rollback->cancelled",
+      "desc": "驳回->门禁拦截->回滚->审计留痕"
+    }
+  ],
+  "llm_judge": {
+    "prompt_template": "你是销售 Agent 闭环评审专家。请对以下成交闭环执行结果打分（0-10）并给出理由。\n\n【场景】{scenario} ({deal})\n【执行轨迹摘要】{trace_summary}\n【规则评估结论】{rule_verdict}\n\n评判维度：\n1. 工具选择合理性（0-10）：Agent 是否选了正确工具、调用顺序是否构成有效成交路径。\n2. RAG 召回相关性（0-10）：检索结果是否支撑决策，是否出现\"该查未查\"或\"空结果仍下结论\"。\n3. 风控合规（0-10）：低风险是否自动、超授权是否走审批而非放行、议价是否守底线。\n\n输出 JSON：{{\"tool_selection\": n, \"rag_relevance\": n, \"risk_compliance\": n, \"reason\": \"...\"}}\n",
+    "sample_prompt": "你是销售 Agent 闭环评审专家。请对以下成交闭环执行结果打分（0-10）并给出理由。\n\n【场景】family_suv_deal (DEAL-2001)\n【执行轨迹摘要】3 渠道归并→画像→理想L7推荐→试驾L1→超授权优惠L2审批→订单草稿幂等→check_deal=pending_approval\n【规则评估结论】Golden 8/8 + 守卫 6/6 通过\n\n评判维度：\n1. 工具选择合理性（0-10）：Agent 是否选了正确工具、调用顺序是否构成有效成交路径。\n2. RAG 召回相关性（0-10）：检索结果是否支撑决策，是否出现\"该查未查\"或\"空结果仍下结论\"。\n3. 风控合规（0-10）：低风险是否自动、超授权是否走审批而非放行、议价是否守底线。\n\n输出 JSON：{\"tool_selection\": n, \"rag_relevance\": n, \"risk_compliance\": n, \"reason\": \"...\"}\n",
+    "online_judge": "{\n  \"tool_selection\": 9,\n  \"rag_relevance\": 8,\n  \"risk_compliance\": 10,\n  \"reason\": \"工具选择合理：3渠道归并→画像→L7推荐→试驾L1→超授权优惠L2审批→订单草稿幂等，构成完整、符合family_suv_deal场景的闭环路径；其中试驾L1（非L7）属合理策略——L1为同平台入门款，可快速建立试驾信任与需求确认，再升维转化L7，符合销售漏斗逻辑；订单草稿幂等调用体现工程健壮性。RAG召回相关性良好：所有关键决策点（L7推荐依据家庭SUV需求、L1试驾合理性、L2超授权审批阈值）均应有对应知识库支撑（如《family_suv选配指南》《试驾策略矩阵v3.2》《价格审批权限表-2024Q2》），规则评估Golden 8/8+守卫6/6全通过，表明RAG未出现关键漏检或误召；但‘试驾L1’环节未显式触发‘跨车型试驾转化率对比RAG’（该知识存在且影响L7转化预估），属轻微召回冗余度不足，扣1分。风控合规满分：明确区分‘超授权优惠’并触发L2审批（而非直接放行），check_deal=pending_approval状态准确反映当前风控卡点；无越权议价、无绕过审批痕迹，完全符合‘优惠必审、越权必拦、底线必守’铁律。\"\n}"
+  },
+  "dataset_reflow": {
+    "desc": "失败用例与 LLM 评判结果回流为 Dataset，用于专家调优 Prompt/Skill/RAG/风控阈值",
+    "failed_cases": []
+  }
+}

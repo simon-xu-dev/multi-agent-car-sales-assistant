@@ -25,7 +25,7 @@ export default function ScenarioDemo() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">场景演示</h1>
         <p className="text-slate-400 max-w-2xl mx-auto">
-          3个真实交易场景，展示从客户咨询到成交的全链路Agent协作过程
+          3个真实交易场景，展示从客户咨询到成交的全链路AgentTeams协同过程与工具调用Trace
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export default function ScenarioDemo() {
               onClick={() => setShowTrace(!showTrace)}
               className="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors"
             >
-              {showTrace ? '隐藏Trace' : '查看Trace'} ({trace.result.length}次调用)
+              {showTrace ? '隐藏Trace' : '查看Trace'} ({trace.result.length}次工具调用)
             </button>
           </div>
 

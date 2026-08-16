@@ -1,0 +1,32 @@
+{
+  "scenario_id": "trade_in_renewal",
+  "deal_id": "DEAL-2003",
+  "decision_context": {
+    "scenario_id": "trade_in_renewal",
+    "deal_type": "trade_in",
+    "customer_tier": "vip",
+    "model_code": "TANG",
+    "price": 179800.0,
+    "quote_id": "QUOTE-TRADE_IN_RENEWAL-1",
+    "approval_type": "discount_override",
+    "approval_detail": "优惠金额 30000.0 让步原因「置换压价」 报价单 QUOTE-TRADE_IN_RENEWAL-1",
+    "authorization_info": "优惠让步授权底线 1798.0，超出即需审批",
+    "memory_recall": "DEAL-2001: ",
+    "order_id": "ORD-950BC1",
+    "order_status": "draft",
+    "approval_refs": [
+      "APR-AB5537"
+    ],
+    "deal_summary": "存在待人工审批的高风险动作（大额优惠 / 征信授权），成交挂起等待审批。 状态=pending_approval 待审1/通过0/驳回0"
+  },
+  "llm_decision": {
+    "decision": "pending",
+    "approver": "门店经理",
+    "reason": "优惠金额30000.0元远超授权底线1798.0元（达16.7倍），属重大让步；虽客户为VIP且车型为TANG，但‘置换压价’理由未提供佐证（如竞品报价、旧车残值评估、置换补贴政策依据等），材料不充分；历史案例DEAL-2001显示同类置换续单存在待审高风险动作，需人工复核合理性与风控合规性。",
+    "outcome": "human_handoff",
+    "decision_source": "llm",
+    "llm_model": "qwen-plus",
+    "raw_response": "{\n  \"decision\": \"pending\",\n  \"approver\": \"门店经理\",\n  \"reason\": \"优惠金额30000.0元远超授权底线1798.0元（达16.7倍），属重大让步；虽客户为VIP且车型为TANG，但‘置换压价’理由未提供佐证（如竞品报价、旧车残值评估、置换补贴政策依据等），材料不充分；历史案例DEAL-2001显示同类置换续单存在待审高风险动作，需人工复核合理性与风控合规性。\",\n  \"outcome\": \"human_handoff\"\n}",
+    "scenario_id": "trade_in_renewal"
+  }
+}

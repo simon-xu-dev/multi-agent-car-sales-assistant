@@ -1,0 +1,21 @@
+{
+  "lead_id": "LEAD-2003",
+  "touches": [
+    {
+      "channel": "wechat",
+      "template": "renewal_reminder",
+      "risk_level": "L1",
+      "status": "sent"
+    }
+  ],
+  "revival_plan": {
+    "segment": "老客户",
+    "action": "置换补贴+售后权益打包触达"
+  },
+  "referral_potential": "high",
+  "evidence_refs": [
+    "history:renewal"
+  ],
+  "_agent": "customer_ops",
+  "_deal": "DEAL-2003"
+}

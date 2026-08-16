@@ -1,0 +1,79 @@
+{
+  "ok": true,
+  "trace_id": "4458493edf3c4d559dd38a61441a43a2",
+  "result": {
+    "total": 8,
+    "actions": [
+      {
+        "action_id": "ACT-b8f469aa",
+        "name": "update_lead_stage",
+        "risk_level": "L0",
+        "time": "2026-08-16T09:40:51+0800",
+        "lead_id": "LEAD-2001",
+        "stage": "qualified"
+      },
+      {
+        "action_id": "ACT-a8f9dd3b",
+        "name": "update_lead_stage",
+        "risk_level": "L0",
+        "time": "2026-08-16T11:02:33+0800",
+        "lead_id": "LEAD-2001",
+        "stage": "qualified"
+      },
+      {
+        "action_id": "ACT-7449e247",
+        "name": "book_testdrive",
+        "risk_level": "L1",
+        "time": "2026-08-16T16:34:38+0800",
+        "booking_id": "BK-5ECED8",
+        "slot": "2026-08-09 10:30",
+        "model_code": "L7"
+      },
+      {
+        "action_id": "ACT-fd8d0793",
+        "name": "submit_credit_approval",
+        "risk_level": "L2",
+        "time": "2026-08-16T16:34:47+0800",
+        "plan_id": "PLAN-0C257A",
+        "customer_id": "CUST-2001",
+        "approval_id": "APR-B949CC"
+      },
+      {
+        "action_id": "ACT-6036d552",
+        "name": "reserve_car",
+        "risk_level": "L1",
+        "time": "2026-08-16T16:41:42+0800",
+        "model_code": "L7",
+        "store_id": "store_001"
+      },
+      {
+        "action_id": "ACT-a8a3144c",
+        "name": "create_order",
+        "risk_level": "L2",
+        "time": "2026-08-16T16:41:48+0800",
+        "order_id": "ORD-182DC2",
+        "order_key": "ORDER-FAMILY_SUV_DEAL-20260816-06",
+        "quote_id": "QUOTE-FAMILY_SUV_DEAL-7",
+        "approval_refs": [
+          "APR-B949CC"
+        ]
+      },
+      {
+        "action_id": "ACT-c4b26cc9",
+        "name": "send_template_message",
+        "risk_level": "L1",
+        "time": "2026-08-16T16:43:17+0800",
+        "customer_id": "CUST-2001",
+        "template": "test_drive_follow_up"
+      },
+      {
+        "action_id": "ACT-4e31d984",
+        "name": "send_template_message",
+        "risk_level": "L1",
+        "time": "2026-08-16T16:43:21+0800",
+        "customer_id": "CUST-2001",
+        "template": "delivery_care"
+      }
+    ]
+  }
+}

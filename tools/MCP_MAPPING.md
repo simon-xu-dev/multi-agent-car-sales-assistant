@@ -26,23 +26,24 @@ curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_crm.list_sessions
 | `mock_crm` | `get_lead`, `list_sessions`, `get_customer_history`, `update_lead_stage` | `crm.lead.query`, `crm.lead.stage_update` | CRM / 线索管理 |
 | `mock_inventory` | `list_models`, `check_stock`, `reserve_car` | `dms.inventory.query`, `dms.inventory.reserve` | 库存 / DMS |
 | `mock_price` | `get_policy`, `calc_quote`, `apply_discount` | `pricing.policy.query`, `pricing.quote.calc`, `pricing.discount.apply` | 价格与优惠系统 |
-| `mock_finance` | `calc_plan`, `submit_approval`, `check_approval` | `finance.plan.calc`, `finance.approval.submit`, `finance.approval.query` | 金融审批系统 |
+| `mock_finance` | `calc_plan`, `submit_approval`, `check_approval`, `approve`, `reject` | `finance.plan.calc`, `finance.approval.submit`, `finance.approval.query`, `finance.approval.approve`, `finance.approval.reject` | 金融审批系统 |
 | `mock_testdrive` | `list_slots`, `book_slot`, `cancel_booking` | `testdrive.slot.query`, `testdrive.slot.book`, `testdrive.slot.cancel` | 试驾预约系统 |
-| `mock_order` | `create_order`, `get_order`, `rollback_order` | `order.create`, `order.query`, `order.rollback` | 订单 / 合同系统 |
+| `mock_order` | `create_order`, `get_order`, `rollback_order`, `confirm_order` | `order.create`, `order.query`, `order.rollback`, `order.confirm` | 订单 / 合同系统 |
 | `mock_knowledge` | `search_product`, `search_sop`, `search_case`, `save_case` | `knowledge.rag.search`, `knowledge.case.save` | 知识库 / RAG 向量库 |
 | `mock_wechat` | `get_session`, `send_template_message` | `wechat.session.query`, `wechat.template_message.send` | 企业微信 SCRM |
-| `mock_verify` | `check_deal` | `deal.verify` | 成交闭环验证探针 |
+| `mock_verify` | `check_deal`, `audit_trail` | `deal.verify`, `deal.audit.query` | 成交闭环验证探针 / 审计轨迹 |
 
 ## 鉴权与审计契约（等价 MCP 契约）
 
-- **协议**：HTTP JSON（未来迁移 MCP 仅需协议适配层）。
+- **协议**：HTTP JSON（未来迁移 MCP 仅需协议适配层）。MCP Server（`tools/mcp_server.py`，FastMCP stdio，22 工具）已实证：业务逻辑零重构，仅协议适配。
 - **鉴权方式**：网关层面注入租户 / 门店上下文；生产环境由 Higress 统一鉴权与限流。
 - **输入输出 Schema**：见 `tools/tool_catalog.json` 与各 Agent 的 Output Contract。
 - **错误处理**：未知工具 / 未知场景返回 `{"ok": false, "error": ...}`，Agent 需按 Skill 的失败处理策略降级，禁止编造数据。
-- **审计记录**：每次调用写入 `GET /tools/{scenario_id}/tools/trace` 的 Trace 记录（时间 / 工具 / 参数 / 结果预览），支撑全链路回放。
-- **幂等控制**：`mock_order.create_order` 以 `order_key` 保证幂等；重复调用返回已有订单。
-- **回滚能力**：`mock_testdrive.cancel_booking`、`mock_order.rollback_order` 提供低风险回滚点。
-- **降级方式**：工具不可用时 Agent 输出证据缺口与人工建议，不猜测数据。
+- **审计记录**：每次调用写入 `GET /tools/{scenario_id}/tools/trace` 的 Trace 记录（时间 / 工具 / 参数 / 结果预览），支撑全链路回放；高风险动作（approve/reject/rollback/confirm）同步写结构化 Log（`/logs`，trace_id 关联）+ append-only 审计 JSONL（`{scenario_id}_audit.jsonl`，重启不丢），并可通过 `GET /tools/{scenario_id}/audit` 按 approval_id / order_id 筛选查询。
+- **幂等控制**：`mock_order.create_order` 以 `order_key` 保证幂等；重复调用返回已有订单。`approve`/`reject` 幂等——对已决策审批返回当前状态，不二次变更。
+- **回滚能力**：`mock_testdrive.cancel_booking`、`mock_order.rollback_order` 提供回滚点；`reject` 标记关联订单 `rollback_requested`（决策层只标记），由执行层显式调用 `rollback_order` 回滚（决策与执行分离）。
+- **门禁**：`mock_order.confirm_order` 门禁——所有关联审批必须 `approved` 且无 `rejected` 才允许 `draft→confirmed`；存在 pending 或 rejected 时返回 `blocked`（高风险动作禁止默认放行）。
+- **降级方式**：工具不可用时 Agent 输出证据缺口与人工建议，不猜测数据；审批超时按未批准处理（pending → human_handoff），禁止默认放行。
 
 ## 风险分级（贯穿所有工具）
 
