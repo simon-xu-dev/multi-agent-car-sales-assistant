@@ -2,199 +2,633 @@
   "ok": true,
   "result": [
     {
-      "time": "2026-08-10T03:10:52+0000",
+      "time": "2026-08-16T16:51:02+0800",
       "tool": "mock_crm.list_sessions",
       "args": {},
-      "result_preview": "[{\"channel\": \"douyin\", \"customer_id\": \"CUST-2002\", \"owner\": \"抖音私信\", \"text\": \"刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。\", \"time\": \"14:05\"}, {\"channel\": \"phone\", \"..."
+      "result_preview": "[{\"channel\": \"douyin\", \"customer_id\": \"CUST-2002\", \"owner\": \"抖音私信\", \"text\": \"刚毕业两年，想买第一辆车，预算 12 万到 15 万，想分期买，最好月供低一点。新能源还是油车还没想好，想听建议。\", \"time\": \"14:05\"}, {\"channel\": \"phone\", \"...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "dc87c21638fe461f",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.list_sessions"
+      },
+      "duration_ms": 0.19
     },
     {
-      "time": "2026-08-10T03:10:55+0000",
+      "time": "2026-08-16T16:51:05+0800",
       "tool": "mock_crm.get_lead",
       "args": {
-        "lead_id": "DEAL-2002"
+        "lead_id": null
       },
-      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "625d32c3b0a64fa0",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.17
     },
     {
-      "time": "2026-08-10T03:11:10+0000",
-      "tool": "mock_knowledge.search_product",
+      "time": "2026-08-16T16:51:09+0800",
+      "tool": "mock_wechat.get_session",
       "args": {
-        "query": null
+        "customer_id": "CUST-2002"
       },
-      "result_preview": "[{\"match_terms\": [\"秦\", \"比亚迪\", \"插混\", \"首购\"], \"summary\": \"紧凑型插混轿车，综合续航 1150km，亏电油耗低，落地价 12-14 万，首购人群热门选择。\", \"tags\": [\"秦PLUS\", \"比亚迪\", \"插混\"], \"title\": \"比亚迪秦PLUS DM-i 产品知识\"}, {\"match_..."
+      "result_preview": "{\"customer_id\": \"CUST-2002\", \"sessions\": []}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "13680f4775204924",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.get_session"
+      },
+      "duration_ms": 0.08
     },
     {
-      "time": "2026-08-10T03:11:13+0000",
-      "tool": "mock_knowledge.search_case",
+      "time": "2026-08-16T16:51:09+0800",
+      "tool": "mock_knowledge.search_sop",
       "args": {
-        "query": null
+        "query": "分期购车 首购 金融 月供 征信"
       },
-      "result_preview": "[{\"match_terms\": [\"首购\", \"金融\", \"月供\", \"成交\"], \"summary\": \"24 岁首购客户，预算 13 万。通过厂家低息方案（2.99%）将月供压到 2800 元以内，搭配 3 成首付，7 天成交秦PLUS。关键动作：金融方案前置 + 月供敏感点把控。\", \"tags\": [\"首购\", \"金融\", \"成交\"], \"t..."
+      "result_preview": "[{\"match_terms\": [\"SOP\", \"金融\", \"首购\", \"征信\", \"审批\", \"月供\", \"意向\", \"评分\", \"分期\"], \"summary\": \"1) 先确认预算与月供承受力；2) 推荐 2-3 款候选；3) 生成 2 组金融方案对比（低息 vs 银行分期）；4) 客户确认方案后，发起征信授权审批（涉及个人数据，必须 L2 人...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "3036f97e3cd741a8",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 1.73
     },
     {
-      "time": "2026-08-10T05:36:04+0000",
+      "time": "2026-08-16T16:51:35+0800",
+      "tool": "mock_crm.update_lead_stage",
+      "args": {
+        "lead_id": "LEAD-2002",
+        "stage": "qualified"
+      },
+      "result_preview": "{\"lead_id\": \"LEAD-2002\", \"message\": \"Lead stage updated to qualified.\", \"stage\": \"qualified\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "d1e15cfeeb5c4add",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.update_lead_stage"
+      },
+      "duration_ms": 0.44
+    },
+    {
+      "time": "2026-08-16T17:14:11+0800",
       "tool": "mock_crm.get_lead",
       "args": {
-        "lead_id": "CUST-2002"
+        "lead_id": "LEAD-2002"
       },
-      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "60686c76d1fa4910",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.94
     },
     {
-      "time": "2026-08-10T05:36:04+0000",
+      "time": "2026-08-16T17:14:13+0800",
       "tool": "mock_crm.get_customer_history",
       "args": {
         "customer_id": "CUST-2002"
       },
-      "result_preview": "[{\"detail\": \"在品牌直播间停留 20 分钟，咨询过秦PLUS 价格。\", \"event\": \"短视频互动\", \"time\": \"2025-05-20\"}]"
+      "result_preview": "[{\"detail\": \"在品牌直播间停留 20 分钟，咨询过秦PLUS 价格。\", \"event\": \"短视频互动\", \"time\": \"2025-05-20\"}]",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "802f5c5e84c24b5e",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 0.07
     },
     {
-      "time": "2026-08-10T05:36:04+0000",
+      "time": "2026-08-16T17:14:19+0800",
       "tool": "mock_knowledge.search_case",
       "args": {
-        "query": "首购分期购车 年轻人 低月供 预算12-15万"
+        "query": "首购 分期 金融 月供 12万 15万 年轻客户"
       },
-      "result_preview": "[]"
+      "result_preview": "[{\"match_terms\": [\"首购\", \"金融\", \"月供\", \"成交\"], \"summary\": \"24 岁首购客户，预算 13 万。通过厂家低息方案（2.99%）将月供压到 2800 元以内，搭配 3 成首付，7 天成交秦PLUS。关键动作：金融方案前置 + 月供敏感点把控。\", \"tags\": [\"首购\", \"金融\", \"成交\"], \"t...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "d746a77d83e04a63",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_case"
+      },
+      "duration_ms": 1.38
     },
     {
-      "time": "2026-08-10T05:36:29+0000",
+      "time": "2026-08-16T17:16:44+0800",
       "tool": "mock_crm.get_lead",
       "args": {
-        "lead_id": null
+        "lead_id": "LEAD-2002"
       },
-      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "863cf7e1b9c6419a",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.32
     },
     {
-      "time": "2026-08-10T05:36:39+0000",
+      "time": "2026-08-16T17:16:50+0800",
       "tool": "mock_knowledge.search_sop",
       "args": {
-        "query": "首购客户 意图评估 跟进策略"
+        "query": "首购客户 金融 征信 SOP 意向评分"
       },
-      "result_preview": "[]"
+      "result_preview": "[{\"match_terms\": [\"SOP\", \"金融\", \"首购\", \"征信\", \"审批\", \"月供\", \"意向\", \"评分\", \"分期\"], \"summary\": \"1) 先确认预算与月供承受力；2) 推荐 2-3 款候选；3) 生成 2 组金融方案对比（低息 vs 银行分期）；4) 客户确认方案后，发起征信授权审批（涉及个人数据，必须 L2 人...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "13510edc5a68432b",
+      "parent_span_id": null,
+      "span_kind": "rag",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_knowledge.search_sop"
+      },
+      "duration_ms": 1.78
     },
     {
-      "time": "2026-08-10T05:59:55+0000",
+      "time": "2026-08-16T17:19:24+0800",
       "tool": "mock_inventory.list_models",
       "args": {},
-      "result_preview": "[{\"category\": \"紧凑型插混轿车\", \"code\": \"QIN\", \"guide_price\": 129800, \"name\": \"比亚迪秦PLUS DM-i\", \"specs\": {\"family_features\": \"用车成本低，适合通勤\", \"fuel_cost\": \"百公里 3.8L 等效\", \"range_km\": 1150, ..."
+      "result_preview": "[{\"category\": \"紧凑型插混轿车\", \"code\": \"QIN\", \"guide_price\": 129800, \"name\": \"比亚迪秦PLUS DM-i\", \"specs\": {\"family_features\": \"用车成本低，适合通勤\", \"fuel_cost\": \"百公里 3.8L 等效\", \"range_km\": 1150, ...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "e60e4e8f8cc14d06",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.list_models"
+      },
+      "duration_ms": 0.41
     },
     {
-      "time": "2026-08-10T05:59:55+0000",
+      "time": "2026-08-16T17:19:24+0800",
+      "tool": "mock_crm.get_lead",
+      "args": {
+        "lead_id": "LEAD-2002"
+      },
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "8291a6274fd64b1c",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.07
+    },
+    {
+      "time": "2026-08-16T17:19:32+0800",
       "tool": "mock_price.get_policy",
       "args": {},
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "e325041149d448b3",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.get_policy"
+      },
+      "duration_ms": 0.08
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:32+0800",
       "tool": "mock_price.calc_quote",
       "args": {
         "model_code": "QIN",
         "customer_tier": "normal"
       },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 778.8, \"customer_tier\": \"normal\", \"final_price\": 125021.2, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚迪..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 778.8, \"customer_tier\": \"normal\", \"final_price\": 125021.2, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚迪...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "a6a958b79152496c",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.18
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:32+0800",
       "tool": "mock_price.calc_quote",
       "args": {
         "model_code": "SL03",
         "customer_tier": "normal"
       },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 899.4, \"customer_tier\": \"normal\", \"final_price\": 143000.6, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长安..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 899.4, \"customer_tier\": \"normal\", \"final_price\": 143000.6, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长安...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "a233d61e19134f6a",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.62
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:32+0800",
       "tool": "mock_price.calc_quote",
       "args": {
         "model_code": "L6",
         "customer_tier": "normal"
       },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 718.8, \"customer_tier\": \"normal\", \"final_price\": 116081.2, \"guide_price\": 119800.0, \"model_code\": \"L6\", \"model_name\": \"吉利银河..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 718.8, \"customer_tier\": \"normal\", \"final_price\": 116081.2, \"guide_price\": 119800.0, \"model_code\": \"L6\", \"model_name\": \"吉利银河...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "984caf2c497a4b69",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.06
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:32+0800",
       "tool": "mock_inventory.check_stock",
       "args": {
         "model_code": "QIN",
         "store_id": "store_002"
       },
-      "result_preview": "{\"available\": 8, \"enough_for_demo\": true, \"model_code\": \"QIN\", \"model_name\": \"比亚迪秦PLUS DM-i\", \"store_id\": \"store_002\"}"
+      "result_preview": "{\"available\": 8, \"enough_for_demo\": true, \"model_code\": \"QIN\", \"model_name\": \"比亚迪秦PLUS DM-i\", \"store_id\": \"store_002\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "b079efeba6994ca3",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 1.46
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:45+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "QIN",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1038.4, \"customer_tier\": \"silver\", \"final_price\": 124761.6, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "73bb6b4f77094827",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.27
+    },
+    {
+      "time": "2026-08-16T17:19:45+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "SL03",
+        "customer_tier": "silver"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1199.2, \"customer_tier\": \"silver\", \"final_price\": 142700.8, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "06cee30569ed4bd0",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T17:19:45+0800",
       "tool": "mock_inventory.check_stock",
       "args": {
         "model_code": "SL03",
         "store_id": "store_002"
       },
-      "result_preview": "{\"available\": 4, \"enough_for_demo\": true, \"model_code\": \"SL03\", \"model_name\": \"长安深蓝 SL03\", \"store_id\": \"store_002\"}"
+      "result_preview": "{\"available\": 4, \"enough_for_demo\": true, \"model_code\": \"SL03\", \"model_name\": \"长安深蓝 SL03\", \"store_id\": \"store_002\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "d6002bdd17b748c1",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 0.09
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:19:45+0800",
       "tool": "mock_inventory.check_stock",
       "args": {
         "model_code": "L6",
         "store_id": "store_002"
       },
-      "result_preview": "{\"available\": 6, \"enough_for_demo\": true, \"model_code\": \"L6\", \"model_name\": \"吉利银河 L6\", \"store_id\": \"store_002\"}"
+      "result_preview": "{\"available\": 6, \"enough_for_demo\": true, \"model_code\": \"L6\", \"model_name\": \"吉利银河 L6\", \"store_id\": \"store_002\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "b663f1458b824228",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.check_stock"
+      },
+      "duration_ms": 0.09
     },
     {
-      "time": "2026-08-10T06:00:11+0000",
+      "time": "2026-08-16T17:28:35+0800",
       "tool": "mock_crm.get_lead",
       "args": {
-        "lead_id": "CUST-2002"
+        "lead_id": "LEAD-2002"
       },
-      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "0dfc8ce12dc0492e",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_lead"
+      },
+      "duration_ms": 0.51
     },
     {
-      "time": "2026-08-10T06:04:14+0000",
+      "time": "2026-08-16T17:28:39+0800",
       "tool": "mock_price.get_policy",
       "args": {},
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil..."
-    },
-    {
-      "time": "2026-08-10T06:04:17+0000",
-      "tool": "mock_crm.get_lead",
-      "args": {
-        "lead_id": null
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount_pct\": 0.6, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成 L2 审批任务。\", \"tiers\": {\"gold\": 0.5, \"normal\": 0.0, \"sil...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "88404d7d041744fb",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.get_policy"
       },
-      "result_preview": "{\"budget_hint\": \"12-15 万\", \"created_at\": \"14:05\", \"customer_id\": \"CUST-2002\", \"finance_need\": \"分期购车，月供敏感\", \"lead_id\": \"LEAD-2002\", \"score\": 0.0, \"source\": \"douyin+phone\", \"stage..."
+      "duration_ms": 0.17
     },
     {
-      "time": "2026-08-10T06:04:24+0000",
+      "time": "2026-08-16T17:28:45+0800",
       "tool": "mock_price.calc_quote",
       "args": {
         "model_code": "QIN",
-        "customer_tier": "silver"
+        "customer_tier": "normal"
       },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1038.4, \"customer_tier\": \"silver\", \"final_price\": 124761.6, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 778.8, \"customer_tier\": \"normal\", \"final_price\": 125021.2, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚迪...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "d8b18a593c614255",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.12
     },
     {
-      "time": "2026-08-10T06:04:27+0000",
-      "tool": "mock_price.calc_quote",
-      "args": {
-        "model_code": "SL03",
-        "customer_tier": "silver"
-      },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 1199.2, \"customer_tier\": \"silver\", \"final_price\": 142700.8, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长..."
-    },
-    {
-      "time": "2026-08-10T06:04:30+0000",
+      "time": "2026-08-16T17:28:50+0800",
       "tool": "mock_finance.calc_plan",
       "args": {
-        "price": 124761.6,
-        "down_payment": 18714.0,
-        "months": 60
+        "price": 125021.2,
+        "down_payment": 37506.36,
+        "months": 36
       },
-      "result_preview": "{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 18714.0, \"loan\": 106047.6, \"monthly_payment\": 1905.07, \"months\": 60, \"plan_id\": \"PLAN-BD7C9C\", \"product\": \"厂家低息金融\", \"total_i..."
+      "result_preview": "{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 37506.36, \"loan\": 87514.84, \"monthly_payment\": 2544.65, \"months\": 36, \"plan_id\": \"PLAN-ACBF85\", \"product\": \"厂家低息金融\", \"total_...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "99945538e3d040a5",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.calc_plan"
+      },
+      "duration_ms": 0.14
     },
     {
-      "time": "2026-08-10T06:04:36+0000",
+      "time": "2026-08-16T17:28:57+0800",
       "tool": "mock_price.calc_quote",
       "args": {
-        "model_code": "L6",
-        "customer_tier": "silver"
+        "model_code": "SL03",
+        "customer_tier": "normal"
       },
-      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 958.4, \"customer_tier\": \"silver\", \"final_price\": 115841.6, \"guide_price\": 119800.0, \"model_code\": \"L6\", \"model_name\": \"吉利银河..."
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 899.4, \"customer_tier\": \"normal\", \"final_price\": 143000.6, \"guide_price\": 149900.0, \"model_code\": \"SL03\", \"model_name\": \"长安...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "5df954858d684ec5",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.89
+    },
+    {
+      "time": "2026-08-16T17:29:02+0800",
+      "tool": "mock_finance.submit_approval",
+      "args": {
+        "plan_id": "PLAN-ACBF85",
+        "customer_id": "CUST-2002"
+      },
+      "result_preview": "{\"approval_id\": \"APR-99ADBC\", \"message\": \"征信授权审批任务已创建（涉及个人数据，必须人工审批，审批记录留痕审计）。\", \"risk_level\": \"L2\", \"status\": \"created\", \"type\": \"credit_authorization\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "e6c3a48149154daf",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.submit_approval"
+      },
+      "duration_ms": 0.15
+    },
+    {
+      "time": "2026-08-16T17:29:04+0800",
+      "tool": "mock_finance.check_approval",
+      "args": {
+        "approval_id": "APR-99ADBC"
+      },
+      "result_preview": "{\"approval_id\": \"APR-99ADBC\", \"customer_id\": \"CUST-2002\", \"plan_id\": \"PLAN-ACBF85\", \"status\": \"pending\", \"type\": \"credit_authorization\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "17280b69b4624070",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_finance.check_approval"
+      },
+      "duration_ms": 0.11
+    },
+    {
+      "time": "2026-08-16T17:31:54+0800",
+      "tool": "mock_inventory.reserve_car",
+      "args": {
+        "model_code": "QIN",
+        "store_id": "store_002"
+      },
+      "result_preview": "{\"action\": \"reserve_car\", \"message\": \"库存预留成功（L1 可逆动作，超时自动释放）。\", \"model_code\": \"QIN\", \"reservation_id\": \"RES-9D5329\", \"status\": \"reserved\", \"store_id\": \"store_002\"}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "454d15b5ed644e39",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_inventory.reserve_car"
+      },
+      "duration_ms": 0.37
+    },
+    {
+      "time": "2026-08-16T17:31:56+0800",
+      "tool": "mock_price.calc_quote",
+      "args": {
+        "model_code": "QIN",
+        "customer_tier": "normal"
+      },
+      "result_preview": "{\"authorized_max_discount_pct\": 1.0, \"base_discount\": 778.8, \"customer_tier\": \"normal\", \"final_price\": 125021.2, \"guide_price\": 129800.0, \"model_code\": \"QIN\", \"model_name\": \"比亚迪...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "7ee4bdb632df4623",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_price.calc_quote"
+      },
+      "duration_ms": 0.07
+    },
+    {
+      "time": "2026-08-16T17:32:00+0800",
+      "tool": "mock_order.create_order",
+      "args": {
+        "lead_id": "LEAD-2002",
+        "quote_id": "QUOTE-FIRST_CAR_FINANCE-8",
+        "order_key": "ORDER-FIRST_CAR_FINANCE-20260816-06"
+      },
+      "result_preview": "{\"approval_refs\": [\"APR-99ADBC\"], \"lead_id\": \"LEAD-2002\", \"message\": \"订单草稿已创建。合同与交付属于高风险动作，必须人工审批后进入 confirmed。\", \"order_id\": \"ORD-DBA506\", \"order_key\": \"ORDER-FIRST_CAR_FINANCE...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "8aaf7e6a1a704a13",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_order.create_order"
+      },
+      "duration_ms": 0.13
+    },
+    {
+      "time": "2026-08-16T17:32:02+0800",
+      "tool": "mock_order.get_order",
+      "args": {
+        "order_id": "ORD-DBA506"
+      },
+      "result_preview": "{\"approval_refs\": [\"APR-99ADBC\"], \"lead_id\": \"LEAD-2002\", \"message\": \"订单草稿已创建。合同与交付属于高风险动作，必须人工审批后进入 confirmed。\", \"order_id\": \"ORD-DBA506\", \"order_key\": \"ORDER-FIRST_CAR_FINANCE...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "99314628d8784243",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_order.get_order"
+      },
+      "duration_ms": 0.1
+    },
+    {
+      "time": "2026-08-16T17:32:06+0800",
+      "tool": "mock_verify.check_deal",
+      "args": {
+        "deal_id": "APR-99ADBC"
+      },
+      "result_preview": "{\"actions_executed\": 4, \"approvals\": [{\"approval_id\": \"APR-99ADBC\", \"decided_by\": null, \"status\": \"pending\", \"type\": \"credit_authorization\"}], \"approvals_approved\": 0, \"approval...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "0bd1246dc3ac4d5a",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_verify.check_deal"
+      },
+      "duration_ms": 0.17
+    },
+    {
+      "time": "2026-08-16T17:42:30+0800",
+      "tool": "mock_crm.get_customer_history",
+      "args": {
+        "customer_id": "CUST-2002"
+      },
+      "result_preview": "[{\"detail\": \"在品牌直播间停留 20 分钟，咨询过秦PLUS 价格。\", \"event\": \"短视频互动\", \"time\": \"2025-05-20\"}]",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "a900a73544de4a80",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_crm.get_customer_history"
+      },
+      "duration_ms": 1.26
+    },
+    {
+      "time": "2026-08-16T17:42:30+0800",
+      "tool": "mock_wechat.get_session",
+      "args": {
+        "customer_id": "CUST-2002"
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2002\", \"sessions\": []}",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "10f66f18ceb440b3",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.get_session"
+      },
+      "duration_ms": 0.11
+    },
+    {
+      "time": "2026-08-16T17:43:50+0800",
+      "tool": "mock_wechat.send_template_message",
+      "args": {
+        "customer_id": "CUST-2002",
+        "template": "credit_approval_update",
+        "params": {
+          "customer_name": "客户",
+          "approval_id": "APR-99ADBC",
+          "status": "审批中",
+          "estimated_time": "1-2个工作日"
+        }
+      },
+      "result_preview": "{\"customer_id\": \"CUST-2002\", \"message\": \"企业微信模板消息已发送（标准话术模板，低风险自动执行）。\", \"params\": {\"approval_id\": \"APR-99ADBC\", \"customer_name\": \"客户\", \"estimated_time\": \"1-2个工作日\", \"status\": \"审批...",
+      "trace_id": "f47bae29ba14407494cb072d1121ac73",
+      "span_id": "00178785fccd437c",
+      "parent_span_id": null,
+      "span_kind": "tool",
+      "status": "ok",
+      "attributes": {
+        "tool.name": "mock_wechat.send_template_message"
+      },
+      "duration_ms": 0.36
     }
   ]
 }
