@@ -6,4 +6,4 @@ docker logs hiclaw-worker-negotiation-executor --since 5m 2>&1 | grep -i "Handle
 echo "=== team room latest 5 messages ==="
 TOKEN="<MATRIX_ADMIN_TOKEN>"
 docker exec hiclaw-controller sh -c "unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY && curl -s -H 'Authorization: Bearer $TOKEN' 'http://127.0.0.1:6167/_matrix/client/v3/rooms/!RSGVna8h8WsCaAlamW:matrix-local.hiclaw.io:18080/messages?dir=b&limit=5'" > /tmp/team_msgs.json 2>/dev/null
-python3 /Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/print_msgs.py
+python3 /Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/ops/print_msgs.py

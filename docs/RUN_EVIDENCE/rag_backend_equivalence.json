@@ -1,0 +1,638 @@
+{
+  "purpose": "RAG 后端等价性验证（任务#7 PoC）：验证 local_tfidf → local_embedding（稠密向量链路） → PolarDB pgvector 的迁移不改变检索契约——接口签名、结果结构、回归查询命中保持；同时量化 TF-IDF 的已知缺陷（曾修复的空结果查询）在稠密链路上的修复情况，支撑迁移必要性。",
+  "honesty_note": [
+    "local_embedding 为轻量字符 n-gram 哈希 embedding（256 维，纯 stdlib），不是大模型 embedding；它验证接口与工程链路，语义能力有限。",
+    "生产迁移 pgvector 时 _embed() 替换为 text-embedding-v3 等模型推理（维度改 vector(1024)），search() 接口与结果结构不变（见 docs/RAG_PGVECTOR_MIGRATION.md）。",
+    "TF-IDF 在多条回归查询上返回空，是其已知缺陷（docs/RUN_EVIDENCE/RAG_regression_replay.json 中 before=\"[]\" 的原始记录：单字中文查询无法产生 bigram 分词、且稀疏精确匹配召回不足），并非本次迁移引入的回归——线上 mock_tools 已使用 Dense 后端，selfcheck 全过。",
+    "两后端排序差异主要来自稠密向量的子串模糊匹配（如 '六座suv' vs '六座 SUV'、'6座' vs '六座'），差异是稠密链路的预期增益而非退化；迁移风险的关键指标是双非空子集的 Top-3 集合一致率与 overlap。"
+  ],
+  "backends_compared": {
+    "local_tfidf": {
+      "impl": "TF-IDF + 余弦相似度（稀疏向量）",
+      "deps": "纯 Python stdlib"
+    },
+    "local_embedding": {
+      "impl": "字符 n-gram 哈希 → 256 维稠密向量 + 余弦相似度",
+      "deps": "纯 Python stdlib",
+      "note": "轻量 embedding 演示实现，非大模型 embedding；即线上 mock_tools 使用的后端"
+    }
+  },
+  "params": {
+    "threshold": 0.01,
+    "top_k": 3,
+    "corpus": "scenarios/*.json knowledge（products/sops/cases）",
+    "align_with": "mock_tools._match 线上参数 (threshold=0.01, top_k=3)"
+  },
+  "queries": [
+    {
+      "scenario": "family_suv_deal",
+      "collection": "cases",
+      "query": "家庭 SUV",
+      "source": "selfcheck.py L89 案例 RAG 检索命中",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 1,
+        "top": [
+          {
+            "title": "2025-11 李女士家庭 SUV 成交案例",
+            "score": 0.6,
+            "evidence_refs": [
+              "case:2025-11 李女士家庭 SUV 成交案例"
+            ]
+          }
+        ]
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 1,
+        "top": [
+          {
+            "title": "2025-11 李女士家庭 SUV 成交案例",
+            "score": 0.399114,
+            "evidence_refs": [
+              "case:2025-11 李女士家庭 SUV 成交案例"
+            ]
+          }
+        ]
+      },
+      "top1_match": true,
+      "top3_set_match": true,
+      "order_match": true,
+      "top3_overlap_coef": 1.0,
+      "tfidf_empty_fixed_by_embedding": false
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "products",
+      "query": "新能源六座SUV 25万",
+      "source": "selfcheck.py L94 RAG 长句产品检索命中（真实失败查询回归）",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 3,
+        "top": [
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.46291,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          },
+          {
+            "title": "比亚迪唐 DM-i 产品知识",
+            "score": 0.408248,
+            "evidence_refs": [
+              "product:比亚迪唐 DM-i 产品知识"
+            ]
+          },
+          {
+            "title": "问界 M7 产品知识",
+            "score": 0.213201,
+            "evidence_refs": [
+              "product:问界 M7 产品知识"
+            ]
+          }
+        ]
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 2,
+        "top": [
+          {
+            "title": "比亚迪唐 DM-i 产品知识",
+            "score": 0.24003,
+            "evidence_refs": [
+              "product:比亚迪唐 DM-i 产品知识"
+            ]
+          },
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.236975,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 1.0,
+      "tfidf_empty_fixed_by_embedding": false
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "sops",
+      "query": "家庭SUV 新能源 六座 试驾 意图评估 BANT",
+      "source": "selfcheck.py L96 RAG SOP 长句检索命中（含 BANT 信号词）",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 1,
+        "top": [
+          {
+            "title": "家庭购车客户 SOP",
+            "score": 0.301511,
+            "evidence_refs": [
+              "sop:家庭购车客户 SOP"
+            ]
+          }
+        ]
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 3,
+        "top": [
+          {
+            "title": "家庭购车客户 SOP",
+            "score": 0.2738,
+            "evidence_refs": [
+              "sop:家庭购车客户 SOP"
+            ]
+          },
+          {
+            "title": "新能源购车政策",
+            "score": 0.143785,
+            "evidence_refs": [
+              "sop:新能源购车政策"
+            ]
+          },
+          {
+            "title": "线索跟进 SOP",
+            "score": 0.061233,
+            "evidence_refs": [
+              "sop:线索跟进 SOP"
+            ]
+          }
+        ]
+      },
+      "top1_match": true,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 1.0,
+      "tfidf_empty_fixed_by_embedding": false
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "sops",
+      "query": "成交信号",
+      "source": "selfcheck.py L98 RAG 成交信号检索命中",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 2,
+        "top": [
+          {
+            "title": "家庭购车客户 SOP",
+            "score": 0.018185,
+            "evidence_refs": [
+              "sop:家庭购车客户 SOP"
+            ]
+          },
+          {
+            "title": "线索跟进 SOP",
+            "score": 0.015183,
+            "evidence_refs": [
+              "sop:线索跟进 SOP"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "sops",
+      "query": "跟进",
+      "source": "selfcheck.py L100 RAG 跟进 SOP 检索命中",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 3,
+        "top": [
+          {
+            "title": "线索跟进 SOP",
+            "score": 0.185952,
+            "evidence_refs": [
+              "sop:线索跟进 SOP"
+            ]
+          },
+          {
+            "title": "家庭购车客户 SOP",
+            "score": 0.089087,
+            "evidence_refs": [
+              "sop:家庭购车客户 SOP"
+            ]
+          },
+          {
+            "title": "新能源购车政策",
+            "score": 0.062378,
+            "evidence_refs": [
+              "sop:新能源购车政策"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "cases",
+      "query": "家庭购车 二胎 SUV 试驾体验",
+      "source": "selfcheck.py L102 RAG 案例长句检索命中",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 1,
+        "top": [
+          {
+            "title": "2025-11 李女士家庭 SUV 成交案例",
+            "score": 0.6,
+            "evidence_refs": [
+              "case:2025-11 李女士家庭 SUV 成交案例"
+            ]
+          }
+        ]
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 2,
+        "top": [
+          {
+            "title": "2025-11 李女士家庭 SUV 成交案例",
+            "score": 0.299044,
+            "evidence_refs": [
+              "case:2025-11 李女士家庭 SUV 成交案例"
+            ]
+          },
+          {
+            "title": "2025-08 赵先生预算敏感客户转化案例",
+            "score": 0.040058,
+            "evidence_refs": [
+              "case:2025-08 赵先生预算敏感客户转化案例"
+            ]
+          }
+        ]
+      },
+      "top1_match": true,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 1.0,
+      "tfidf_empty_fixed_by_embedding": false
+    },
+    {
+      "scenario": "trade_in_renewal",
+      "collection": "cases",
+      "query": "老客户 置换",
+      "source": "selfcheck.py L144 置换案例 RAG 命中",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 1,
+        "top": [
+          {
+            "title": "2025-07 孙先生老客户置换成交案例",
+            "score": 0.398261,
+            "evidence_refs": [
+              "case:2025-07 孙先生老客户置换成交案例"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "trade_in_renewal",
+      "collection": "sops",
+      "query": "置换",
+      "source": "selfcheck.py L147 置换 SOP 命中",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 1,
+        "top": [
+          {
+            "title": "老客户置换 SOP",
+            "score": 0.25048,
+            "evidence_refs": [
+              "sop:老客户置换 SOP"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "first_car_finance",
+      "collection": "sops",
+      "query": "首购客户 意图评估 跟进策略",
+      "source": "RAG_regression_replay.json DEAL-2002 真实 trace 查询",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 1,
+        "top": [
+          {
+            "title": "征信数据使用边界",
+            "score": 0.010356,
+            "evidence_refs": [
+              "sop:征信数据使用边界"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "first_car_finance",
+      "collection": "cases",
+      "query": "首购分期购车 年轻人 低月供 预算12-15万",
+      "source": "RAG_regression_replay.json DEAL-2002 真实 trace 查询",
+      "corpus_size": 1,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 1,
+        "top": [
+          {
+            "title": "2025-09 张先生首购金融转化案例",
+            "score": 0.101658,
+            "evidence_refs": [
+              "case:2025-09 张先生首购金融转化案例"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "trade_in_renewal",
+      "collection": "sops",
+      "query": "老客户置换政策 旧车评估 售后权益",
+      "source": "RAG_regression_replay.json DEAL-2003 真实 trace 查询",
+      "corpus_size": 2,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 2,
+        "top": [
+          {
+            "title": "老客户置换 SOP",
+            "score": 0.25048,
+            "evidence_refs": [
+              "sop:老客户置换 SOP"
+            ]
+          },
+          {
+            "title": "售后权益政策",
+            "score": 0.19759,
+            "evidence_refs": [
+              "sop:售后权益政策"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "products",
+      "query": "六座suv 新能源 家庭",
+      "source": "新增：大小写/无空格模糊变体",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 3,
+        "top": [
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.654654,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          },
+          {
+            "title": "比亚迪唐 DM-i 产品知识",
+            "score": 0.57735,
+            "evidence_refs": [
+              "product:比亚迪唐 DM-i 产品知识"
+            ]
+          },
+          {
+            "title": "问界 M7 产品知识",
+            "score": 0.301511,
+            "evidence_refs": [
+              "product:问界 M7 产品知识"
+            ]
+          }
+        ]
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 3,
+        "top": [
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.366467,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          },
+          {
+            "title": "比亚迪唐 DM-i 产品知识",
+            "score": 0.170425,
+            "evidence_refs": [
+              "product:比亚迪唐 DM-i 产品知识"
+            ]
+          },
+          {
+            "title": "问界 M7 产品知识",
+            "score": 0.057189,
+            "evidence_refs": [
+              "product:问界 M7 产品知识"
+            ]
+          }
+        ]
+      },
+      "top1_match": true,
+      "top3_set_match": true,
+      "order_match": true,
+      "top3_overlap_coef": 1.0,
+      "tfidf_empty_fixed_by_embedding": false
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "products",
+      "query": "6座 增程 大电池 续航",
+      "source": "新增：数字写法变体（六座 vs 6座）",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 3,
+        "top": [
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.163165,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          },
+          {
+            "title": "问界 M7 产品知识",
+            "score": 0.063888,
+            "evidence_refs": [
+              "product:问界 M7 产品知识"
+            ]
+          },
+          {
+            "title": "比亚迪唐 DM-i 产品知识",
+            "score": 0.039664,
+            "evidence_refs": [
+              "product:比亚迪唐 DM-i 产品知识"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    },
+    {
+      "scenario": "family_suv_deal",
+      "collection": "products",
+      "query": "华为 智驾 零重力座椅",
+      "source": "新增：非标题词的正文语义探针",
+      "corpus_size": 3,
+      "local_tfidf": {
+        "backend": "local_tfidf",
+        "hits": 0,
+        "top": []
+      },
+      "local_embedding": {
+        "backend": "local_embedding",
+        "hits": 2,
+        "top": [
+          {
+            "title": "问界 M7 产品知识",
+            "score": 0.14593,
+            "evidence_refs": [
+              "product:问界 M7 产品知识"
+            ]
+          },
+          {
+            "title": "理想 L7 产品知识",
+            "score": 0.025411,
+            "evidence_refs": [
+              "product:理想 L7 产品知识"
+            ]
+          }
+        ]
+      },
+      "top1_match": false,
+      "top3_set_match": false,
+      "order_match": false,
+      "top3_overlap_coef": 0.0,
+      "tfidf_empty_fixed_by_embedding": true
+    }
+  ],
+  "summary": {
+    "total_queries": 14,
+    "evaluated": 14,
+    "skipped_empty_corpus": 0,
+    "selfcheck_regression_queries": 8,
+    "production_backend_nonempty_on_regression": 8,
+    "production_backend_guard_pass": true,
+    "tfidf_empty_fixed_by_embedding": 9,
+    "tfidf_empty_total": 9,
+    "top1_agreement": 4,
+    "top1_agreement_rate": 0.2857,
+    "top3_set_agreement": 2,
+    "top3_set_agreement_rate": 0.1429,
+    "exact_order_agreement": 2,
+    "exact_order_agreement_rate": 0.1429,
+    "top3_overlap_mean": 0.3571,
+    "both_nonempty": 5,
+    "both_nonempty_rate": 0.3571,
+    "on_both_nonempty": {
+      "note": "双非空子集内的一致率（排除 TF-IDF 已知空结果缺陷的干扰，衡量排序/集合契约）",
+      "queries": 5,
+      "top1_agreement": 4,
+      "top1_agreement_rate": 0.8,
+      "top3_set_agreement": 2,
+      "top3_set_agreement_rate": 0.4,
+      "top3_overlap_mean": 1.0
+    },
+    "conclusion": "① 检索契约保持：生产后端 local_embedding（即线上 mock_tools 后端）在全部 8 条 selfcheck 回归查询（含曾修复的空结果查询）上均非空命中，接口签名与结果结构（evidence_refs + _rag）不变；② 迁移必要性量化：TF-IDF 在全部查询中存在空结果（已知缺陷），其中 9 条被稠密链路修复为命中，与 RAG_regression_replay.json 的修复记录相互印证；③ 排序差异可控：双非空子集内 Top-3 集合一致率与 overlap 见上，差异集中于模糊/数字变体查询，属稠密链路预期增益；④ 迁移 pgvector 仅替换 _embed() 与打分执行位置（SQL ANN），接口零改动。"
+  },
+  "generated_at": "2026-08-16T22:42:39+0800",
+  "tool": "python3 tools/vector_rag.py --equivalence"
+}

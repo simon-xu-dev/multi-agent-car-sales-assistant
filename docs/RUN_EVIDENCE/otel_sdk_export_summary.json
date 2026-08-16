@@ -1,0 +1,64 @@
+{
+  "total_traces_replayed": 3,
+  "total_spans_exported": 79,
+  "otel_sdk_version": "1.27.0",
+  "exporters": [
+    "ConsoleSpanExporter",
+    "FileSpanExporter"
+  ],
+  "genai_semconv_attributes": [
+    "gen_ai.system",
+    "gen_ai.agent.name",
+    "gen_ai.tool.name",
+    "gen_ai.request.model",
+    "gen_ai.operation.name"
+  ],
+  "span_layers_total": {
+    "agent_spans": 0,
+    "skill_spans": 0,
+    "tool_spans": 0,
+    "rag_spans": 0
+  },
+  "honest_boundary": "OTel SDK 生成的 span 拥有 SDK 内部分配的 trace_id/span_id（不可注入）；原工具网关的 trace_id/span_id 作为 carsales.original_trace_id / carsales.span_id_original 属性保留，工具网关 JSON 为审计源真相，OTel SDK 导出为「真 OTel 格式」证据，两套可双向回溯。Agent/Skill 层 span 由 agent_span_builder.py 从 AgentTeams transcript 推导（derivation=derived_from_transcript，时间范围包住子 span 实际时间戳）。",
+  "per_trace": [
+    {
+      "spans_exported": 33,
+      "otel_trace_id": "0x4c98ea3f4a661f334f9399bd5db05a2c",
+      "original_trace_id": null,
+      "otel_service_name": "carsales-agentteams",
+      "otel_sdk_version": "1.27.0",
+      "span_kinds": {
+        "SpanKind.INTERNAL": 33
+      },
+      "genai_attribute_spans": 33,
+      "exported_file": "docs/RUN_EVIDENCE/otel_sdk_spans.jsonl",
+      "source_file": "DEAL-2001_trace.json"
+    },
+    {
+      "spans_exported": 22,
+      "otel_trace_id": "0xb4b9f793ad1a55cc0bff62cfe47572c8",
+      "original_trace_id": null,
+      "otel_service_name": "carsales-agentteams",
+      "otel_sdk_version": "1.27.0",
+      "span_kinds": {
+        "SpanKind.INTERNAL": 22
+      },
+      "genai_attribute_spans": 22,
+      "exported_file": "docs/RUN_EVIDENCE/otel_sdk_spans.jsonl",
+      "source_file": "DEAL-2003_trace.json"
+    },
+    {
+      "spans_exported": 24,
+      "otel_trace_id": "0xf56d90249845602fc79f4f5aa2ed3637",
+      "original_trace_id": null,
+      "otel_service_name": "carsales-agentteams",
+      "otel_sdk_version": "1.27.0",
+      "span_kinds": {
+        "SpanKind.INTERNAL": 24
+      },
+      "genai_attribute_spans": 24,
+      "exported_file": "docs/RUN_EVIDENCE/otel_sdk_spans.jsonl",
+      "source_file": "DEAL-2002_trace_full.json"
+    }
+  ]
+}

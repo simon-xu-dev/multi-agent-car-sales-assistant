@@ -3,7 +3,7 @@
 LEADER=hiclaw-worker-carsales-demo-leader
 
 echo "=== 1. 拷贝补丁并应用 ==="
-docker cp /Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/patch_mention_filter.py $LEADER:/tmp/patch_mention_filter.py
+docker cp /Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/ops/patch_mention_filter.py $LEADER:/tmp/patch_mention_filter.py
 docker exec $LEADER python3 /tmp/patch_mention_filter.py
 
 echo "=== 2. 验证补丁已写入方法体 ==="

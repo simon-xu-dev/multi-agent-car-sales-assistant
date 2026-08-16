@@ -1,4 +1,4 @@
-"""CarSales mock 工具网关自检：验证 3 个场景的核心闭环逻辑。
+"""CarSales mock 工具网关自检：验证 4 个场景的核心闭环逻辑。
 
 用法: python3 tools/selfcheck.py
 不需要启动 HTTP 服务器，直接调用 LocalMockTools 验证业务逻辑。
@@ -163,6 +163,116 @@ def scenario_trade_in_renewal() -> None:
     check("闭环验证 pending_approval", deal["status"] == "pending_approval")
 
 
+def scenario_trade_in_finance() -> None:
+    """DEAL-2004 置换+金融复合场景：双 L2 审批门禁叠加 + 议价底线守护 + 订单幂等。"""
+    print("\n== trade_in_finance: 置换+金融双审批复合场景 ==")
+    t = LocalMockTools("trade_in_finance")
+
+    # ---- 线索归并与老客户画像 ----
+    sessions = t.list_sessions()
+    check("多渠道会话归并 3 条", len(sessions) == 3, f"got {len(sessions)}")
+    lead = t.get_lead()
+    check("老客户线索 gold 等级", lead.get("loyalty_tier") == "gold" and lead.get("is_repeat_customer") is True)
+    history = t.get_customer_history("CUST-2004")
+    check("3 年老客户历史记忆召回", len(history) >= 3, f"got {len(history)}")
+
+    # ---- 置换评估（L0）与新车报价（gold）----
+    assessment = t.assess_vehicle("比亚迪汉 DM-i 冠军版", 56000)
+    check("旧车置换评估 L0 计算", assessment["standard_offer"] == 132000 and assessment["risk_level"] == "L0")
+    check("置换总价值 = 评估价 + 补贴", assessment["total_trade_in_value"] == 147000)
+
+    quote = t.calc_quote("L9", "gold")
+    expected = round(459800 - 459800 * 0.013 - 10000, 2)
+    check("L9 gold 报价计算正确", quote["final_price"] == expected, f"got {quote['final_price']}")
+
+    # ---- 金融缺口方案：置换总价值 + 自有资金 12 万冲抵 ----
+    down_total = assessment["total_trade_in_value"] + 120000
+    plan = t.calc_plan(quote["final_price"], down_total, 36)
+    check("金融方案生成 2 组", len(plan["plans"]) == 2)
+    loan = quote["final_price"] - down_total
+    r = 0.0299 / 12
+    expected_monthly = round(loan * r / (1 - (1 + r) ** -36), 2)
+    check("厂家低息月供可复算", plan["plans"][0]["monthly_payment"] == expected_monthly,
+          f"got {plan['plans'][0]['monthly_payment']} expect {expected_monthly}")
+
+    # ---- 双 L2 审批门禁：征信授权 + 置换估值上浮 ----
+    credit = t.submit_approval(plan["plans"][0]["plan_id"], "CUST-2004")
+    check("征信授权 L2 审批任务", credit["status"] == "created" and credit["risk_level"] == "L2")
+
+    uplift = t.request_uplift(assessment["assessment_id"], 150000, "客户要求旧车按 15 万收")
+    check("估值上浮 1.8 万超授权 -> L2", uplift["status"] == "needs_approval" and uplift["risk_level"] == "L2")
+    check("置换估值审批任务创建", uplift["approval_id"].startswith("APR-"))
+
+    # 授权内估值上浮（另一评估单）：L1 自动应用
+    a2 = t.assess_vehicle("比亚迪汉 DM-i 冠军版", 56000)
+    up2 = t.request_uplift(a2["assessment_id"], 138000, "授权内小幅上浮")
+    check("授权内估值上浮 L1 自动应用", up2["status"] == "applied" and up2["risk_level"] == "L1")
+
+    # 幂等：同评估单同估值重复申请返回原审批，不重复创建
+    up3 = t.request_uplift(assessment["assessment_id"], 150000, "重复申请 15 万估值")
+    check("估值上浮申请幂等去重", up3.get("deduplicated") is True and up3["approval_id"] == uplift["approval_id"])
+
+    # ---- 议价与置换上浮叠加的底线守护 ----
+    stack1 = t.apply_discount(quote["quote_id"], 35000, "置换+金融客户要求叠加 3.5 万优惠")
+    check("叠加 3.5 万超授权优惠 -> L2 审批", stack1["status"] == "needs_approval")
+    stack2 = t.apply_discount(quote["quote_id"], 35000, "再次申请叠加优惠（触底）")
+    check("底线守护：叠加让步重复申请不放行", stack2["status"] == "needs_approval")
+
+    deal = t.check_deal("DEAL-2004")
+    # 待审 4 项 = 征信授权 + 置换估值上浮 + 两笔叠加让步申请（apply_discount 重复申请各自建审批，均待人工决策）
+    check("闭环验证 pending_approval（双审批+叠加让步申请待审）",
+          deal["status"] == "pending_approval" and deal["approvals_pending"] == 4,
+          str(deal.get("approvals_pending")))
+
+    # ---- 转人工闭环：人工统一驳回两笔叠加现金优惠（守底线，改权益补偿）----
+    rj = t.reject(stack1["approval_id"], "门店经理-王芳", "估值上浮已让 1.8 万，叠加 3.5 万现金优惠触总让步底线，改赠延保权益")
+    check("叠加优惠驳回（转人工后守底线）", rj["status"] == "rejected")
+    rj2 = t.reject(stack2["approval_id"], "门店经理-王芳", "重复让步申请同样驳回，维持底线")
+    check("重复让步申请同样驳回", rj2["status"] == "rejected")
+
+    # ---- 订单：双审批关联 + 幂等 ----
+    order = t.create_order("LEAD-2004", quote["quote_id"], "LEAD-2004|QUOTE-1")
+    check("订单草稿 L2 创建", order["status"] == "draft" and order["risk_level"] == "L2")
+    refs = order.get("approval_refs", [])
+    check("订单快照关联双审批（征信+估值，不含已驳回）",
+          uplift["approval_id"] in refs and credit["approval_id"] in refs
+          and stack1["approval_id"] not in refs and stack2["approval_id"] not in refs,
+          str(refs))
+    order2 = t.create_order("LEAD-2004", quote["quote_id"], "LEAD-2004|QUOTE-1")
+    check("订单幂等（同 order_key 不重复创建）", order2["order_id"] == order["order_id"])
+
+    # ---- 双审批依赖：未批/半批均拦截，齐备后放行 ----
+    blocked0 = t.confirm_order(order["order_id"])
+    check("双审批均未批 confirm 被拦截", blocked0["status"] == "blocked" and blocked0["blocked_reason"] == "pending_approvals")
+
+    ap_uplift = t.approve(uplift["approval_id"], "门店经理-王芳", "估值上浮 1.8 万在可接受区间")
+    check("置换估值审批通过", ap_uplift["status"] == "approved")
+    blocked1 = t.confirm_order(order["order_id"])
+    check("征信未批 confirm 仍被拦截（双审批依赖）", blocked1["status"] == "blocked"
+          and blocked1["blocked_reason"] == "pending_approvals"
+          and credit["approval_id"] in blocked1["pending_approvals"], str(blocked1))
+
+    ap_credit = t.approve(credit["approval_id"], "门店经理-王芳", "征信授权合规，客户已线上确认")
+    check("征信审批通过", ap_credit["status"] == "approved")
+    confirmed = t.confirm_order(order["order_id"])
+    check("双审批齐备后订单确认", confirmed["status"] == "confirmed")
+
+    # ---- RAG 证据与审计 ----
+    sop = t.search_sop("置换 金融 复合 双审批 征信 估值")
+    check("复合场景 SOP RAG 命中", len(sop) >= 1)
+    case = t.search_case("置换 金融 复合 双审批 成交")
+    check("复合场景案例 RAG 命中", len(case) >= 1)
+
+    at = t.audit_trail()
+    names = [a["name"] for a in at]
+    check("审计轨迹含估值审批+驳回+确认",
+          "trade_in_valuation_override" in names and "reject_approval" in names and "confirm_order" in names)
+
+    touch = t.send_template_message("CUST-2004", "trade_in_delivery_reminder", {"benefit": "置换补贴15000"})
+    check("交付关怀模板消息 L1 发送", touch["status"] == "sent" and touch["risk_level"] == "L1")
+    check("工具调用 Trace 留痕", len(t.trace) >= 15, f"trace={len(t.trace)}")
+
+
 def scenario_approval_audit_loop() -> None:
     """P2.3 安全审计闭环：approve/reject -> confirm/rollback -> audit_trail 端到端。"""
     print("\n== approval_audit_loop: 审批决策 -> 回滚/确认 -> 审计轨迹 ==")
@@ -217,6 +327,7 @@ def main() -> None:
     scenario_family_suv()
     scenario_first_car_finance()
     scenario_trade_in_renewal()
+    scenario_trade_in_finance()
     scenario_approval_audit_loop()
     print(f"\n===== RESULT: {PASS} passed, {FAIL} failed =====")
     sys.exit(1 if FAIL else 0)

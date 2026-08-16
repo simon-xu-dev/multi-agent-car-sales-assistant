@@ -3,7 +3,7 @@
 set -x
 
 LEADER=hiclaw-worker-carsales-demo-leader
-SRC=/Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/patch_force_global.py
+SRC=/Users/chery-not-23982/Learn/competation/Agent-infra/SalesFlow/tools/ops/patch_force_global.py
 
 echo "=== 1. 拷贝补丁脚本到 leader ==="
 docker cp "$SRC" "$LEADER":/tmp/patch_force_global.py

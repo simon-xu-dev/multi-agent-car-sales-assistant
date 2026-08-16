@@ -1,0 +1,402 @@
+{
+  "meta": {
+    "title": "故障注入测试报告（非 happy path 异常处理证据）",
+    "generated_at": "2026-08-16T22:42:34+0800",
+    "purpose": "回应评审风险点：\"116 次工具调用 100% 成功率缺少失败场景证据，只有 happy path\"",
+    "how_to_reproduce": "cd SalesFlow && python3 tools/fault_injection_test.py",
+    "gateway_cmd": "/Library/Frameworks/Python.framework/Versions/3.14/bin/python3 tools/mock_tool_server.py --host 127.0.0.1 --port <ephemeral> --trace-dir <tempdir>",
+    "gateway_a": {
+      "port": 50476,
+      "fault_injection_env": {
+        "mock_crm.get_lead": {
+          "type": "timeout",
+          "delay_ms": 300
+        },
+        "mock_price.get_policy": {
+          "type": "http_500"
+        },
+        "mock_knowledge.search_product": {
+          "type": "empty_result"
+        },
+        "mock_inventory.check_stock": {
+          "type": "auth_error"
+        },
+        "mock_finance.calc_plan": {
+          "type": "timeout",
+          "delay_ms": 120,
+          "fail_times": 1
+        }
+      }
+    },
+    "gateway_b": {
+      "port": 50510,
+      "fault_injection_env": "未设置（注入关闭）"
+    },
+    "mechanism": "mock_tool_server.py 读取环境变量 FAULT_INJECTION（JSON：工具名->故障规则），在 call_tool 内注入故障；未设置时行为与原版完全一致。注入留痕三处：span attributes.fault_injected / audit action fault_injected / WARN log event=fault_injected",
+    "constraints": "未修改 mock_tools.py（SkillFailureHandler 原样复用）；Python 3.11+ 标准库 only；临时端口与临时 trace 目录，测试后清理",
+    "evidence_note": "临时 trace JSONL 已在用例内断言校验后随临时目录清理；完整证据以本报告 + 可复现命令为准",
+    "elapsed_seconds": 1.8
+  },
+  "summary": {
+    "total_cases": 7,
+    "passed": 7,
+    "failed": 0,
+    "assertions": {
+      "passed": 52,
+      "failed": 0
+    },
+    "fault_types_covered": [
+      "timeout",
+      "http_500",
+      "empty_result",
+      "auth_error"
+    ],
+    "failure_classification_covered": [
+      "retryable（F-01 持续超时重试耗尽降级；F-06 瞬时超时重试成功恢复）",
+      "unknown（F-02 http_500 不重试直接降级+告警）",
+      "non_retryable（F-04 auth_error 降级+人工处理建议）",
+      "empty_result（F-03 空结果集非错误，metrics 计成功）"
+    ],
+    "degradation_contract": "所有注入故障均以 HTTP 200 + {ok:false, degraded:true, status, gap} 结构化降级返回，网关不向调用方抛 5xx（降级不阻断主链）",
+    "isolation_verified": true,
+    "recovery_disabled_verified": true,
+    "recovery_retry_verified": true,
+    "audit_trail_verified": true
+  },
+  "cases": [
+    {
+      "case_id": "F-01",
+      "title": "timeout 持续注入 -> retryable 重试耗尽 -> 降级 + 告警",
+      "scenario": "family_suv_deal",
+      "tool": "mock_crm.get_lead",
+      "fault_type": "timeout(delay_ms=300, 持续注入)",
+      "expectation": "HTTP 200 结构化降级（非 5xx）：retryable 分类 -> 网关重试 1 次仍超时 -> result.ok=false / degraded=true / status=degraded / alert=true；2 条 attempt=1,2 的 fault_injected WARN log（证明重试发生）；duration_ms>=580（两次 300ms 延迟）；span status=degraded + attributes.fault_injected=timeout；audit 轨迹含 fault_injected 事件且落盘 JSONL 可检索",
+      "actual": "HTTP 200; result.status=degraded, alert=True; retry logs=2(attempts [1, 2]); span.status=degraded, span.fault_injected=timeout, duration=605.63ms; audit_events=1; trace/audit JSONL 落盘=True/True",
+      "checks": [
+        {
+          "name": "HTTP 状态码 200（网关降级不阻断，不向调用方抛 5xx）",
+          "ok": true,
+          "detail": "got 200"
+        },
+        {
+          "name": "外层网关 ok=true（请求被正常处理），内层 result.ok=false（工具失败）",
+          "ok": true,
+          "detail": "outer=True result={'ok': False, 'degraded': True, 'status': 'degraded', 'gap': \"mock_crm.get_lead 失败（upstream 'mock_crm.get_lead' timeout after 300ms (fault-injected)）\", 'fallback': 'mock_crm.get_lead 降级输出', 'alert': True, 'retry': False}"
+        },
+        {
+          "name": "降级标记 degraded=true",
+          "ok": true
+        },
+        {
+          "name": "SkillFailureHandler 分类：retryable 重试耗尽后 status=degraded",
+          "ok": true,
+          "detail": "got degraded"
+        },
+        {
+          "name": "降级响应携带告警标记 alert=true",
+          "ok": true
+        },
+        {
+          "name": "fault_injected WARN log 恰好 2 条（attempt=1 与 2，重试真实发生）",
+          "ok": true,
+          "detail": "got 2 logs: [{'time': '2026-08-16T22:42:33+0800', 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '', 'level': 'WARN', 'event': 'fault_injected', 'attributes': {'tool': 'mock_crm.get_lead', 'type': 'timeout', 'attempt': 1}}, {'time': '2026-08-16T22:42:33+0800', 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '', 'level': 'WARN', 'event': 'fault_injected', 'attributes': {'tool': 'mock_crm.get_lead', 'type': 'timeout', 'attempt': 2}}]"
+        },
+        {
+          "name": "降级 span status=degraded 且 attributes.fault_injected=timeout",
+          "ok": true,
+          "detail": "span={'time': '2026-08-16T22:42:33+0800', 'tool': 'mock_crm.get_lead', 'args': {'lead_id': 'LEAD-2001'}, 'result_preview': \"DEGRADED: mock_crm.get_lead 失败（upstream 'mock_crm.get_lead' timeout after 300ms (fault-injected)）\", 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '4c9da2f2f16c4341', 'parent_span_id': None, 'span_kind': 'tool', 'status': 'degraded', 'duration_ms': 605.63, 'attributes': {'tool.name': 'mock_crm.get_lead', 'error.message': \"upstream 'mock_crm.get_lead' timeout after 300ms (fault-injected)\", 'failure.status': 'degraded', 'failure.gap': \"mock_crm.get_lead 失败（upstream 'mock_crm.get_lead' timeout after 300ms (fault-injected)）\", 'fault_injected': 'timeout'}}"
+        },
+        {
+          "name": "span duration_ms>=580（两次注入延迟累积，超时真实发生）",
+          "ok": true,
+          "detail": "got 605.63ms"
+        },
+        {
+          "name": "审计轨迹含 fault_injected(outcome=degraded) 事件",
+          "ok": true,
+          "detail": "audits=[{'action_id': 'ACT-b985eccd', 'name': 'fault_injected', 'risk_level': 'L0', 'time': '2026-08-16T22:42:33+0800', 'tool': 'mock_crm.get_lead', 'type': 'timeout', 'outcome': 'degraded'}]"
+        },
+        {
+          "name": "trace JSONL 落盘含 fault_injected 标注（重启后证据不丢）",
+          "ok": true
+        },
+        {
+          "name": "audit JSONL 落盘含 fault_injected 事件（append-only 审计）",
+          "ok": true
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-02",
+      "title": "http_500 注入 -> unknown 分类 -> 不重试直接降级 + 告警",
+      "scenario": "family_suv_deal",
+      "tool": "mock_price.get_policy",
+      "fault_type": "http_500(持续注入)",
+      "expectation": "HTTP 200 结构化降级：unknown 分类（无重试）-> status=degraded + alert=true；仅 1 条 attempt=1 的 fault_injected log（证明未重试）；span attributes.fault_injected=http_500；audit 留痕；metrics 计入 tool_failure",
+      "actual": "HTTP 200; result.status=degraded, alert=True; fault logs=1(attempt=1, 未重试); span.fault_injected=http_500; tool_failure=2",
+      "checks": [
+        {
+          "name": "HTTP 200 结构化降级",
+          "ok": true,
+          "detail": "code=200, body={'ok': True, 'result': {'ok': False, 'degraded': True, 'status': 'degraded', 'gap': \"mock_price.get_policy 失败（upstream 'mock_price.get_policy' returned HTTP 500 internal server error (fault-injected)）\", 'fallback': 'mock_price.get_policy 降级输出', 'alert': True, 'retry': False}}"
+        },
+        {
+          "name": "unknown 分类降级：status=degraded + alert=true",
+          "ok": true,
+          "detail": "result={'ok': False, 'degraded': True, 'status': 'degraded', 'gap': \"mock_price.get_policy 失败（upstream 'mock_price.get_policy' returned HTTP 500 internal server error (fault-injected)）\", 'fallback': 'mock_price.get_policy 降级输出', 'alert': True, 'retry': False}"
+        },
+        {
+          "name": "仅 1 条 fault_injected log 且 attempt=1（unknown 不重试）",
+          "ok": true,
+          "detail": "logs=[{'time': '2026-08-16T22:42:33+0800', 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '', 'level': 'WARN', 'event': 'fault_injected', 'attributes': {'tool': 'mock_price.get_policy', 'type': 'http_500', 'attempt': 1}}]"
+        },
+        {
+          "name": "span attributes.fault_injected=http_500",
+          "ok": true,
+          "detail": "span={'time': '2026-08-16T22:42:33+0800', 'tool': 'mock_price.get_policy', 'args': {}, 'result_preview': \"DEGRADED: mock_price.get_policy 失败（upstream 'mock_price.get_policy' returned HTTP 500 internal server error (fault-injected)）\", 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '2aa29c4e2ee44a17', 'parent_span_id': None, 'span_kind': 'tool', 'status': 'degraded', 'duration_ms': 0.02, 'attributes': {'tool.name': 'mock_price.get_policy', 'error.message': \"upstream 'mock_price.get_policy' returned HTTP 500 internal server error (fault-injected)\", 'failure.status': 'degraded', 'failure.gap': \"mock_price.get_policy 失败（upstream 'mock_price.get_policy' returned HTTP 500 internal server error (fault-injected)）\", 'fault_injected': 'http_500'}}"
+        },
+        {
+          "name": "audit 轨迹留痕 fault_injected(type=http_500)",
+          "ok": true
+        },
+        {
+          "name": "metrics 计入 tool_failure（失败可观测）",
+          "ok": true,
+          "detail": "metrics={'tool_calls': 4, 'tool_success': 2, 'tool_failure': 2, 'by_tool': {'mock_crm.get_lead': 1, 'mock_verify.audit_trail': 2, 'mock_price.get_policy': 1}, 'by_kind': {'tool': 4, 'rag': 0}, 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'tool_success_rate': 0.5}"
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-03",
+      "title": "empty_result 注入 -> 调用成功但返回空结果集（RAG 空检索等价）",
+      "scenario": "family_suv_deal",
+      "tool": "mock_knowledge.search_product",
+      "fault_type": "empty_result(持续注入)",
+      "expectation": "HTTP 200 且外层 ok=true（非错误，是数据缺失）；result 为空列表 []；span status=empty_result + attributes.fault_injected + fault.original_result_preview（原结果留痕）；audit/log 留痕；metrics 计入 tool_success（空结果非失败）",
+      "actual": "HTTP 200, ok=True, result=[]; span.status=empty_result, fault_injected=empty_result, original_preview=[{\"_rag\": {\"backend\": \"local_embedding\", \"rank\": 1, \"score\": 0.367101, \"threshol...",
+      "checks": [
+        {
+          "name": "HTTP 200 且外层 ok=true（空结果非错误）",
+          "ok": true,
+          "detail": "code=200"
+        },
+        {
+          "name": "result 为空结果集 []（list 型工具语义）",
+          "ok": true,
+          "detail": "got []"
+        },
+        {
+          "name": "span status=empty_result 且 attributes.fault_injected=empty_result",
+          "ok": true,
+          "detail": "span={'time': '2026-08-16T22:42:33+0800', 'tool': 'mock_knowledge.search_product', 'args': {'query': '新能源 SUV'}, 'result_preview': '[{\"_rag\": {\"backend\": \"local_embedding\", \"rank\": 1, \"score\": 0.367101, \"threshold\": 0.01}, \"evidence_refs\": [\"kb:理想 L7 产品知识\"], \"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\", \"新能源\", \"安全...', 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': 'e35798dba2684805', 'parent_span_id': None, 'span_kind': 'rag', 'status': 'empty_result', 'attributes': {'tool.name': 'mock_knowledge.search_product', 'fault_injected': 'empty_result', 'fault.original_result_preview': '[{\"_rag\": {\"backend\": \"local_embedding\", \"rank\": 1, \"score\": 0.367101, \"threshold\": 0.01}, \"evidence_refs\": [\"kb:理想 L7 产品知识\"], \"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\", \"新能源\", \"安全...'}}"
+        },
+        {
+          "name": "span 保留原结果预览（审计可见\"本来会返回什么\"）",
+          "ok": true,
+          "detail": "attrs={'tool.name': 'mock_knowledge.search_product', 'fault_injected': 'empty_result', 'fault.original_result_preview': '[{\"_rag\": {\"backend\": \"local_embedding\", \"rank\": 1, \"score\": 0.367101, \"threshold\": 0.01}, \"evidence_refs\": [\"kb:理想 L7 产品知识\"], \"match_terms\": [\"理想\", \"L7\", \"六座\", \"增程\", \"新能源\", \"安全...'}"
+        },
+        {
+          "name": "audit 轨迹留痕 fault_injected(outcome=empty_result)",
+          "ok": true
+        },
+        {
+          "name": "WARN log 留痕 fault_injected(type=empty_result)",
+          "ok": true
+        },
+        {
+          "name": "metrics 计入 tool_success（空结果非失败）",
+          "ok": true,
+          "detail": "metrics={'tool_calls': 6, 'tool_success': 4, 'tool_failure': 2, 'by_tool': {'mock_crm.get_lead': 1, 'mock_verify.audit_trail': 3, 'mock_price.get_policy': 1, 'mock_knowledge.search_product': 1}, 'by_kind': {'tool': 5, 'rag': 1}, 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'tool_success_rate': 0.6667}"
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-04",
+      "title": "auth_error 注入 -> non_retryable -> 降级 + 人工处理建议",
+      "scenario": "family_suv_deal",
+      "tool": "mock_inventory.check_stock",
+      "fault_type": "auth_error(持续注入)",
+      "expectation": "HTTP 200 结构化降级：non_retryable 分类 -> status=failed + suggestion=\"需人工处理...\"；仅 1 条 attempt=1 的 fault_injected log（不重试）；span attributes.fault_injected=auth_error；audit 留痕",
+      "actual": "HTTP 200; result.status=failed, suggestion=需人工处理 mock_inventory.check_stock; fault logs=1(attempt=1, 未重试); span.fault_injected=auth_error",
+      "checks": [
+        {
+          "name": "HTTP 200 结构化降级（non_retryable 也不阻断网关）",
+          "ok": true,
+          "detail": "code=200, body={'ok': True, 'result': {'ok': False, 'degraded': True, 'status': 'failed', 'gap': \"mock_inventory.check_stock 不可用（upstream 'mock_inventory.check_stock' auth token expired, permission denied (fault-injected)）\", 'suggestion': '需人工处理 mock_inventory.check_stock', 'retry': False}}"
+        },
+        {
+          "name": "non_retryable 分类：status=failed",
+          "ok": true,
+          "detail": "result={'ok': False, 'degraded': True, 'status': 'failed', 'gap': \"mock_inventory.check_stock 不可用（upstream 'mock_inventory.check_stock' auth token expired, permission denied (fault-injected)）\", 'suggestion': '需人工处理 mock_inventory.check_stock', 'retry': False}"
+        },
+        {
+          "name": "降级响应携带人工处理建议 suggestion",
+          "ok": true,
+          "detail": "suggestion=需人工处理 mock_inventory.check_stock"
+        },
+        {
+          "name": "仅 1 条 fault_injected log 且 attempt=1（non_retryable 不重试）",
+          "ok": true,
+          "detail": "logs=[{'time': '2026-08-16T22:42:33+0800', 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '', 'level': 'WARN', 'event': 'fault_injected', 'attributes': {'tool': 'mock_inventory.check_stock', 'type': 'auth_error', 'attempt': 1}}]"
+        },
+        {
+          "name": "span attributes.fault_injected=auth_error",
+          "ok": true,
+          "detail": "span={'time': '2026-08-16T22:42:33+0800', 'tool': 'mock_inventory.check_stock', 'args': {'model_code': 'L7', 'store_id': 'store_001'}, 'result_preview': \"DEGRADED: mock_inventory.check_stock 不可用（upstream 'mock_inventory.check_stock' auth token expired, permission denied (fault-injected)）\", 'trace_id': 'ca094bcb76fa4e6cac5e039f689a0459', 'span_id': '6f610acf5e004064', 'parent_span_id': None, 'span_kind': 'tool', 'status': 'degraded', 'duration_ms': 0.01, 'attributes': {'tool.name': 'mock_inventory.check_stock', 'error.message': \"upstream 'mock_inventory.check_stock' auth token expired, permission denied (fault-injected)\", 'failure.status': 'failed', 'failure.gap': \"mock_inventory.check_stock 不可用（upstream 'mock_inventory.check_stock' auth token expired, permission denied (fault-injected)）\", 'fault_injected': 'auth_error'}}"
+        },
+        {
+          "name": "audit 轨迹留痕 fault_injected(type=auth_error)",
+          "ok": true
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-05",
+      "title": "故障隔离：注入期间其他工具 / 健康检查 / 后续调用不受影响",
+      "scenario": "trade_in_renewal",
+      "tool": "(未注入工具: list_models / list_sessions + 已注入: get_lead 混调)",
+      "fault_type": "get_lead 注入存在，其余工具无注入",
+      "expectation": "GET /health 200 且 fault_injection.enabled=true（注入开启但健康检查正常）；list_models 调用故障前后均 ok=true 返回 3 款车型；list_sessions ok=true；metrics 中 tool_success>=3 与 tool_failure>=1 并存（故障按工具隔离，不扩散）",
+      "actual": "/health=200(enabled=True); list_models 前后两次 ok=True/True; get_lead degraded=True; list_sessions ok=True; success/failure=3/1",
+      "checks": [
+        {
+          "name": "注入期间 /health 200 正常",
+          "ok": true,
+          "detail": "200, {'ok': True, 'service': 'carsales-mock-tool-gateway', 'fault_injection': {'enabled': True, 'rules': ['mock_crm.get_lead', 'mock_finance.calc_plan', 'mock_inventory.check_stock', 'mock_knowledge.search_product', 'mock_price.get_policy']}}"
+        },
+        {
+          "name": "/health 暴露注入状态 enabled=true（运行时可观测）",
+          "ok": true,
+          "detail": "health={'ok': True, 'service': 'carsales-mock-tool-gateway', 'fault_injection': {'enabled': True, 'rules': ['mock_crm.get_lead', 'mock_finance.calc_plan', 'mock_inventory.check_stock', 'mock_knowledge.search_product', 'mock_price.get_policy']}}"
+        },
+        {
+          "name": "故障注入前未注入工具正常（list_models 返回车型目录）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': [{'code': 'TANG', 'name': '比亚迪唐 DM-i', 'category': '中大型插混 SUV', 'guide_price': 179800, 'subsidy': 5000, 'tags': ['七座', '插混', '家用', '置换'], 'stock': {'store_003': 4}, 'specs': {'seats': '7', 'range_km': 1000, 'safety': '刀片电池，6 气囊', 'family_features': '大空间，适合家庭升级'}}, {'code': 'L6', 'name': '比亚迪海狮07', 'category': '中型纯电 SUV', 'guide_price': 189800, 'subsidy': 7000, 'tags': ['纯电', 'SUV', '置换'], 'stock': {'store_003': 3}, 'specs': {'seats': '5', 'range_km': 610, 'safety': 'e平台3.0，刀片电池', 'family_features': '年轻化升级选择'}}]}"
+        },
+        {
+          "name": "已注入工具确实降级（get_lead timeout）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': {'ok': False, 'degraded': True, 'status': 'degraded', 'gap': \"mock_crm.get_lead 失败（upstream 'mock_crm.get_lead' timeout after 300ms (fault-injected)）\", 'fallback': 'mock_crm.get_lead 降级输出', 'alert': True, 'retry': False}}"
+        },
+        {
+          "name": "故障发生后未注入工具仍正常且返回一致（故障不扩散）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': [{'code': 'TANG', 'name': '比亚迪唐 DM-i', 'category': '中大型插混 SUV', 'guide_price': 179800, 'subsidy': 5000, 'tags': ['七座', '插混', '家用', '置换'], 'stock': {'store_003': 4}, 'specs': {'seats': '7', 'range_km': 1000, 'safety': '刀片电池，6 气囊', 'family_features': '大空间，适合家庭升级'}}, {'code': 'L6', 'name': '比亚迪海狮07', 'category': '中型纯电 SUV', 'guide_price': 189800, 'subsidy': 7000, 'tags': ['纯电', 'SUV', '置换'], 'stock': {'store_003': 3}, 'specs': {'seats': '5', 'range_km': 610, 'safety': 'e平台3.0，刀片电池', 'family_features': '年轻化升级选择'}}]}"
+        },
+        {
+          "name": "同域其他工具正常（crm.list_sessions 与故障工具同前缀不受影响）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': [{'channel': 'wechat', 'customer_id': 'CUST-2003', 'time': '16:20', 'text': '你好，我是你们 3 年前买秦PLUS 的老车主陈先生。现在家里想换个大点的车，你们有什么置换政策？旧车能评估多少钱？另外我 3 月份车险到期了，之前的售后权益还能用吗？', 'owner': '企业微信'}, {'channel': 'store', 'customer_id': 'CUST-2003', 'time': '16:45', 'text': '门店到店记录：陈先生到店看中大型 SUV，提出旧车置换 + 要求 3 万元额外优惠。', 'owner': '门店接待记录'}]}"
+        },
+        {
+          "name": "metrics 成功与失败并存（tool_success>=3 且 tool_failure>=1）",
+          "ok": true,
+          "detail": "metrics={'tool_calls': 4, 'tool_success': 3, 'tool_failure': 1, 'by_tool': {'mock_inventory.list_models': 2, 'mock_crm.get_lead': 1, 'mock_crm.list_sessions': 1}, 'by_kind': {'tool': 4, 'rag': 0}, 'trace_id': '2bfab6482f0a4f44a8a25b2cdf2fe7f9', 'tool_success_rate': 0.75}"
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-06",
+      "title": "瞬时故障重试恢复：fail_times=1 的 timeout 首次超时、重试成功",
+      "scenario": "first_car_finance",
+      "tool": "mock_finance.calc_plan",
+      "fault_type": "timeout(delay_ms=120, fail_times=1 仅首次注入)",
+      "expectation": "首次调用 attempt=1 超时（retryable）-> 网关自动重试 attempt=2 不再注入 -> 最终 ok=true 且返回真实金融方案（2 组 plans）；仅 1 条 fault_injected log；最终 span status=ok 且无 fault_injected 标注",
+      "actual": "HTTP 200, plans=2 组, 首次调用耗时 123ms; fault logs 共 1 条(attempt=1); 最终 span.status=ok; 二次调用 ok=True 且无新增注入",
+      "checks": [
+        {
+          "name": "重试后最终成功：ok=true 且返回真实结果（2 组金融方案）",
+          "ok": true,
+          "detail": "code=200, result={'price': 150000.0, 'plans': [{'plan_id': 'PLAN-21F2AA', 'product': '厂家低息金融', 'loan': 120000.0, 'down_payment': 30000.0, 'months': 36, 'annual_rate_pct': 2.99, 'monthly_payment': 3489.22, 'total_interest': 5611.92}, {'plan_id': 'PLAN-CF4555', 'product': '合作银行分期', 'loan': 120000.0, 'down_payment': 30000.0, 'months': 36, 'annual_rate_pct': 3.99, 'monthly_payment': 3542.34, 'total_interest': 7524.24}]}"
+        },
+        {
+          "name": "仅 1 条 fault_injected log（attempt=1 注入，attempt=2 恢复）",
+          "ok": true,
+          "detail": "logs=[{'time': '2026-08-16T22:42:34+0800', 'trace_id': '84af9a3935574673b21df7bb58a4c758', 'span_id': '', 'level': 'WARN', 'event': 'fault_injected', 'attributes': {'tool': 'mock_finance.calc_plan', 'type': 'timeout', 'attempt': 1}}]"
+        },
+        {
+          "name": "最终 span status=ok 且无 fault_injected 标注（恢复后干净）",
+          "ok": true,
+          "detail": "span={'time': '2026-08-16T22:42:34+0800', 'tool': 'mock_finance.calc_plan', 'args': {'price': 150000.0, 'down_payment': 30000.0, 'months': 36}, 'result_preview': '{\"plans\": [{\"annual_rate_pct\": 2.99, \"down_payment\": 30000.0, \"loan\": 120000.0, \"monthly_payment\": 3489.22, \"months\": 36, \"plan_id\": \"PLAN-21F2AA\", \"product\": \"厂家低息金融\", \"total_i...', 'trace_id': '84af9a3935574673b21df7bb58a4c758', 'span_id': '5aeb769ee4ce4a53', 'parent_span_id': None, 'span_kind': 'tool', 'status': 'ok', 'attributes': {'tool.name': 'mock_finance.calc_plan'}, 'duration_ms': 121.77}"
+        },
+        {
+          "name": "端到端耗时>=120ms（注入延迟真实发生）",
+          "ok": true,
+          "detail": "got 123ms"
+        },
+        {
+          "name": "注入配额耗尽后后续调用持续正常（fail_times 自动恢复）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': {'price': 150000.0, 'plans': [{'plan_id': 'PLAN-876526', 'product': '厂家低息金融', 'loan': 120000.0, 'down_payment': 30000.0, 'months': 36, 'annual_rate_pct': 2.99, 'monthly_payment': 3489.22, 'total_interest': 5611.92}, {'plan_id': 'PLAN-BF1961', 'product': '合作银行分期', 'loan': 120000.0, 'down_payment': 30000.0, 'months': 36, 'annual_rate_pct': 3.99, 'monthly_payment': 3542.34, 'total_interest': 7524.24}]}}"
+        }
+      ],
+      "verdict": "pass"
+    },
+    {
+      "case_id": "F-07",
+      "title": "注入关闭恢复：无 FAULT_INJECTION 的新进程全部工具正常",
+      "scenario": "family_suv_deal",
+      "tool": "(F-01~F-04 全部原注入工具)",
+      "fault_type": "无（FAULT_INJECTION 环境变量未设置）",
+      "expectation": "新网关进程 /health 显示 enabled=false；get_lead/get_policy/search_product/check_stock 全部 ok=true 且返回真实数据（search_product RAG 重新命中非空）；全部 span 无 fault_injected 标注、audit 无 fault_injected 事件；JSONL 落盘无注入痕迹",
+      "actual": "/health enabled=False; 4 个原注入工具全部 ok=true（search_product 命中非空）; spans=5 全部无 fault_injected; audit actions=1 无注入事件; JSONL 落盘无注入痕迹",
+      "checks": [
+        {
+          "name": "/health 正常且 fault_injection.enabled=false",
+          "ok": true,
+          "detail": "200, {'ok': True, 'service': 'carsales-mock-tool-gateway', 'fault_injection': {'enabled': False, 'rules': []}}"
+        },
+        {
+          "name": "mock_crm.get_lead 恢复正常（真实数据返回）",
+          "ok": true,
+          "detail": "200, {\"ok\": true, \"result\": {\"lead_id\": \"LEAD-2001\", \"stage\": \"new\", \"source\": \"website+wechat+phone\", \"score\": 0.0, \"customer_id\": \"CUST-2001\", \"created_at\": \"09:40\", \"budget_hint\": \"25 万左右\", \"family_hint"
+        },
+        {
+          "name": "mock_price.get_policy 恢复正常（真实数据返回）",
+          "ok": true,
+          "detail": "200, {\"ok\": true, \"result\": {\"base_discount_pct\": 0.8, \"authorized_max_discount_pct\": 1.0, \"tiers\": {\"normal\": 0.0, \"silver\": 0.2, \"gold\": 0.5}, \"rule\": \"标准报价 = 指导价 - 基础优惠 - 车型补贴 - 客户等级优惠；超出授权 1% 的额外优惠必须生成"
+        },
+        {
+          "name": "mock_knowledge.search_product 恢复正常（真实数据返回）",
+          "ok": true,
+          "detail": "200, {\"ok\": true, \"result\": [{\"title\": \"理想 L7 产品知识\", \"tags\": [\"L7\", \"理想\", \"增程\", \"六座\", \"新能源\", \"SUV\"], \"summary\": \"中大型增程 SUV，六座布局，CLTC 综合续航 1100km，L2+ 智能驾驶，配备后排娱乐屏与双侧电动侧滑门。适合二胎家庭与多人出行。\", \"match_terms\": [\"理想\""
+        },
+        {
+          "name": "mock_inventory.check_stock 恢复正常（真实数据返回）",
+          "ok": true,
+          "detail": "200, {\"ok\": true, \"result\": {\"model_code\": \"L7\", \"model_name\": \"理想 L7\", \"store_id\": \"store_001\", \"available\": 3, \"enough_for_demo\": true}}"
+        },
+        {
+          "name": "mock_crm.update_lead_stage 恢复正常（产生审计动作，用于后续 JSONL 验证）",
+          "ok": true,
+          "detail": "200, {'ok': True, 'result': {'lead_id': 'LEAD-2001', 'stage': 'contacted', 'message': 'Lead stage updated to contacted.'}}"
+        },
+        {
+          "name": "全部 span 无 fault_injected 标注（恢复后零注入痕迹）",
+          "ok": true,
+          "detail": "faulty=[]"
+        },
+        {
+          "name": "审计轨迹无 fault_injected 事件",
+          "ok": true
+        },
+        {
+          "name": "结构化日志无 fault_injected 事件",
+          "ok": true
+        },
+        {
+          "name": "JSONL 落盘存在且无注入痕迹（注入不持久、不跨进程）",
+          "ok": true,
+          "detail": "trace_exists=True, audit_exists=True"
+        }
+      ],
+      "verdict": "pass"
+    }
+  ]
+}

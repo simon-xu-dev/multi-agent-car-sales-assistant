@@ -30,3 +30,4 @@ run_evidence_archive/
 *.pptx.bak
 ppt_*_tmp.txt
 ppt_text_dump.txt
+*_副本.pptx

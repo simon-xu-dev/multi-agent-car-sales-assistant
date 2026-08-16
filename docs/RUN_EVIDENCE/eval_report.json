@@ -138,7 +138,7 @@
       "dimension": "订单幂等",
       "scenario": "family_suv_deal",
       "passed": true,
-      "actual": "ORD-1348CA"
+      "actual": "ORD-153D8C"
     },
     {
       "id": "G07",
@@ -263,10 +263,50 @@
   "llm_judge": {
     "prompt_template": "你是销售 Agent 闭环评审专家。请对以下成交闭环执行结果打分（0-10）并给出理由。\n\n【场景】{scenario} ({deal})\n【执行轨迹摘要】{trace_summary}\n【规则评估结论】{rule_verdict}\n\n评判维度：\n1. 工具选择合理性（0-10）：Agent 是否选了正确工具、调用顺序是否构成有效成交路径。\n2. RAG 召回相关性（0-10）：检索结果是否支撑决策，是否出现\"该查未查\"或\"空结果仍下结论\"。\n3. 风控合规（0-10）：低风险是否自动、超授权是否走审批而非放行、议价是否守底线。\n\n输出 JSON：{{\"tool_selection\": n, \"rag_relevance\": n, \"risk_compliance\": n, \"reason\": \"...\"}}\n",
     "sample_prompt": "你是销售 Agent 闭环评审专家。请对以下成交闭环执行结果打分（0-10）并给出理由。\n\n【场景】family_suv_deal (DEAL-2001)\n【执行轨迹摘要】3 渠道归并→画像→理想L7推荐→试驾L1→超授权优惠L2审批→订单草稿幂等→check_deal=pending_approval\n【规则评估结论】Golden 8/8 + 守卫 6/6 通过\n\n评判维度：\n1. 工具选择合理性（0-10）：Agent 是否选了正确工具、调用顺序是否构成有效成交路径。\n2. RAG 召回相关性（0-10）：检索结果是否支撑决策，是否出现\"该查未查\"或\"空结果仍下结论\"。\n3. 风控合规（0-10）：低风险是否自动、超授权是否走审批而非放行、议价是否守底线。\n\n输出 JSON：{\"tool_selection\": n, \"rag_relevance\": n, \"risk_compliance\": n, \"reason\": \"...\"}\n",
-    "online_judge": "{\n  \"tool_selection\": 9,\n  \"rag_relevance\": 8,\n  \"risk_compliance\": 10,\n  \"reason\": \"工具选择合理：3渠道归并→画像→L7推荐→试驾L1→超授权优惠L2审批→订单草稿幂等，构成完整、符合family_suv_deal场景的闭环路径；其中试驾L1（非L7）属合理策略——L1为同平台入门款，可快速建立试驾信任与需求确认，再升维转化L7，符合销售漏斗逻辑；订单草稿幂等调用体现工程健壮性。RAG召回相关性良好：所有关键决策点（L7推荐依据家庭SUV需求、L1试驾合理性、L2超授权审批阈值）均应有对应知识库支撑（如《family_suv选配指南》《试驾策略矩阵v3.2》《价格审批权限表-2024Q2》），规则评估Golden 8/8+守卫6/6全通过，表明RAG未出现关键漏检或误召；但‘试驾L1’环节未显式触发‘跨车型试驾转化率对比RAG’（该知识存在且影响L7转化预估），属轻微召回冗余度不足，扣1分。风控合规满分：明确区分‘超授权优惠’并触发L2审批（而非直接放行），check_deal=pending_approval状态准确反映当前风控卡点；无越权议价、无绕过审批痕迹，完全符合‘优惠必审、越权必拦、底线必守’铁律。\"\n}"
+    "online_judge": "LLM 调用失败: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1077)>"
   },
   "dataset_reflow": {
     "desc": "失败用例与 LLM 评判结果回流为 Dataset，用于专家调优 Prompt/Skill/RAG/风控阈值",
     "failed_cases": []
+  },
+  "agent_layer_eval": {
+    "desc": "Agent 决策层评估维度（由 tools/agent_eval.py 追加；原 Golden/Badcase 工具层指标保持不变）",
+    "report_file": "agent_eval_report.json",
+    "tool_selection_accuracy": {
+      "DEAL-2001": 1.0,
+      "DEAL-2002": 1.0,
+      "DEAL-2003": 0.9167
+    },
+    "tool_selection_accuracy_avg": 0.9722,
+    "order_constraints_pass": {
+      "DEAL-2001": "4/4",
+      "DEAL-2002": "4/4",
+      "DEAL-2003": "4/4"
+    },
+    "llm_judge_deals": {
+      "DEAL-2002": {
+        "judge_source": "llm",
+        "llm_model": "qwen-plus",
+        "scores": {
+          "tool_selection": 9.0,
+          "rag_relevance": 8.0,
+          "risk_compliance": 10.0
+        },
+        "evidence_file": "llm_judge_DEAL-2002.json"
+      },
+      "DEAL-2003": {
+        "judge_source": "llm",
+        "llm_model": "qwen-plus",
+        "scores": {
+          "tool_selection": 9.0,
+          "rag_relevance": 10.0,
+          "risk_compliance": 10.0
+        },
+        "evidence_file": "llm_judge_DEAL-2003.json"
+      }
+    },
+    "offline_replay": {
+      "trade_in_finance": 1.0
+    }
   }
 }

@@ -94,6 +94,23 @@ def pricing_discount_apply(quote_id: str, amount: float, reason: str = "", scena
     return _tools(scenario_id).apply_discount(quote_id, amount, reason)
 
 
+# ---- 置换评估（置换+金融复合场景 DEAL-2004）----
+@mcp.tool()
+def tradein_assess_vehicle(old_model: str = "", mileage_km: int = 0, scenario_id: str = DEFAULT_SCENARIO) -> dict:
+    """旧车置换评估（L0 只读计算）：标准评估价/置换补贴/置换总价值/估值上浮授权上限。
+    对应 HTTP mock: mock_tradein.assess_vehicle。"""
+    return _tools(scenario_id).assess_vehicle(old_model, mileage_km)
+
+
+@mcp.tool()
+def tradein_request_uplift(assessment_id: str, requested_offer: float, reason: str = "",
+                           scenario_id: str = DEFAULT_SCENARIO) -> dict:
+    """置换估值上浮申请：授权内(L1)自动应用；超授权生成 L2 审批 trade_in_valuation_override，
+    与订单 confirm 门禁联动（估值审批通过前不得锁单）。幂等——同评估单同估值重复申请返回原审批。
+    对应 HTTP mock: mock_tradein.request_uplift。"""
+    return _tools(scenario_id).request_uplift(assessment_id, requested_offer, reason)
+
+
 # ---- 金融审批 ----
 @mcp.tool()
 def finance_plan_calc(price: float, down_payment: float, months: int, scenario_id: str = DEFAULT_SCENARIO) -> dict:
@@ -175,6 +192,17 @@ def knowledge_rag_search(query: str, kind: str = "sop", scenario_id: str = DEFAU
     if kind == "case":
         return t.search_case(query)
     return t.search_sop(query)
+
+
+# ---- 审批告警短信（官方用云 Skill：阿里云短信）----
+@mcp.tool()
+def sms_approval_alert(approval_id: str, deal_id: str = "", risk_type: str = "", summary: str = "",
+                       approver: str = "store_manager", scenario_id: str = DEFAULT_SCENARIO) -> dict:
+    """审批告警短信触达（L1 可逆通知动作）：L2 门禁（超授权优惠/征信授权等）触发 needs_approval 时，
+    短信通知人工审批者。幂等——同 approval_id 只发一次（alert_key 去重，防重发骚扰审批人）；
+    有阿里云短信凭证真调 Dysmsapi，无凭证降级本地外呼记录（channel_type 诚实标注）。
+    对应 HTTP mock: mock_sms.send_approval_alert。"""
+    return _tools(scenario_id).send_approval_alert(approval_id, deal_id, risk_type, summary, approver)
 
 
 # ---- 闭环验证 ----

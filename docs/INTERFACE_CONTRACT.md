@@ -1,13 +1,13 @@
 # 开放接口契约（等价 MCP 集成契约）
 
-> 面向评审：本文件是 SalesFlow 工具能力的**稳定调用契约**。赛题要求"即使暂不采用 MCP，也需把外部工具抽象成可被 Agent / Skill 稳定调用的工具能力，说明工具名称、调用入口、参数 Schema、返回结构、权限范围、失败重试、幂等控制、审计日志和降级方式"。本契约覆盖全部 9 类工具（22 个函数），并给出后续迁移到 MCP 的成本判断：**仅需协议适配层，业务 Skill 与 Agent 零改动**（`tools/mcp_server.py` 已实证）。
+> 面向评审：本文件是 SalesFlow 工具能力的**稳定调用契约**。赛题要求"即使暂不采用 MCP，也需把外部工具抽象成可被 Agent / Skill 稳定调用的工具能力，说明工具名称、调用入口、参数 Schema、返回结构、权限范围、失败重试、幂等控制、审计日志和降级方式"。本契约覆盖全部 11 类工具（25 个函数，含 2 个官方用云 Skill 封装：OSS 证据归档 / 阿里云短信审批告警），并给出后续迁移到 MCP 的成本判断：**仅需协议适配层，业务 Skill 与 Agent 零改动**（`tools/mcp_server.py` 已实证）。
 
 ## 1. 协议
 
 - **当前**：HTTP REST，`POST /tools/{scenario_id}/{tool_name}.{function_name}`，JSON 请求/响应，`{"ok": true, "result": ...}` 统一包装。
 - **调用模式**：`call_pattern` 见 `tools/tool_catalog.json`（机器可读目录）。
-- **MCP 等价**：FastMCP stdio Server（`tools/mcp_server.py`，22 工具），`_STATE_CACHE` 保持 quote/order/approval 跨调用状态，业务逻辑零重构。
-- **迁移到 MCP 的成本**：工具调用链已按"工具名.函数名"命名空间组织，`future_mcp_mapping` 已预置（如 `crm.lead.query`、`pricing.discount.apply`、`order.confirm`、`finance.approval.approve`、`deal.audit.query`）；迁移到 MCP Server **仅需协议适配层替换 HTTP 适配器，业务 Skill 与 Agent 零改动**。`mcp_client_test.py` 9/9 断言已验证 initialize / tools/list / tools/call 全链路。
+- **MCP 等价**：FastMCP stdio Server（`tools/mcp_server.py`，25 工具），`_STATE_CACHE` 保持 quote/order/approval/assessment 跨调用状态，业务逻辑零重构。
+- **迁移到 MCP 的成本**：工具调用链已按"工具名.函数名"命名空间组织，`future_mcp_mapping` 已预置（如 `crm.lead.query`、`pricing.discount.apply`、`order.confirm`、`finance.approval.approve`、`deal.audit.query`）；迁移到 MCP Server **仅需协议适配层替换 HTTP 适配器，业务 Skill 与 Agent 零改动**。`mcp_client_test.py` 12/12 断言已验证 initialize / tools/list / tools/call 全链路。
 
 ## 2. 鉴权方式
 
@@ -29,6 +29,8 @@
 | `mock_price` | `get_policy` | — | `{base_discount_pct, authorized_max_discount_pct, tiers, rule}` | L0 | `pricing.policy.query` |
 | | `calc_quote` | `model_code, customer_tier` | `{quote_id, final_price, guide_price, ...}` | L1 | `pricing.quote.calc` |
 | | `apply_discount` | `quote_id, amount, reason` | `{status:"applied"\|"needs_approval", risk_level, approval_id?}` | L1/L2 | `pricing.discount.apply` |
+| `mock_tradein` | `assess_vehicle` | `old_model?, mileage_km?` | `{assessment_id, standard_offer, trade_in_subsidy, total_trade_in_value, authorized_uplift_max}` | L0 | `tradein.vehicle.assess` |
+| | `request_uplift` | `assessment_id, requested_offer, reason` | `{status:"applied"\|"needs_approval", uplift, authorized_uplift_max, approval_id?}` | L1/L2 | `tradein.valuation.uplift` |
 | `mock_finance` | `calc_plan` | `price, down_payment, months` | `{price, plans:[{plan_id, monthly_payment, ...}]}` | L0 | `finance.plan.calc` |
 | | `submit_approval` | `plan_id, customer_id` | `{status:"created", approval_id, risk_level:"L2"}` | L2 | `finance.approval.submit` |
 | | `check_approval` | `approval_id` | `{approval_id, type, status, ...}` | L0 | `finance.approval.query` |
@@ -47,10 +49,11 @@
 | | `save_case` | `case` | `{status:"saved", case_id, ...}` | L0 | `knowledge.case.save` |
 | `mock_wechat` | `get_session` | `customer_id` | `{customer_id, sessions}` | L0 | `wechat.session.query` |
 | | `send_template_message` | `customer_id, template, params` | `{status:"sent", risk_level:"L1"}` | L1 | `wechat.template_message.send` |
+| `mock_sms` | `send_approval_alert` | `approval_id, deal_id?, risk_type?, summary?, approver?` | `{status:"sent"\|"already_sent", channel_type, alert_key, biz_id, backend}` | L1 | `sms.approval.alert` |
 | `mock_verify` | `check_deal` | `deal_id` | `{status, summary, orders, approvals, approvals_pending/approved/rejected}` | L0 | `deal.verify` |
 | | **`audit_trail`** | `approval_id?, order_id?` | `[{action_id, name, risk_level, time, ...}]` | L0 | `deal.audit.query` |
 
-> 加粗为 P2.3 新增的审批决策与审计原语。RAG 检索（`mock_knowledge.*`）使用 TF-IDF 余弦相似度（`TFIDFRagIndex`，阈值 0.05 + Top-3），后续可平滑迁移到 PolarDB pgvector。
+> 加粗为 P2.3 新增的审批决策与审计原语。RAG 檢索（`mock_knowledge.*`）使用 TF-IDF 余弦相似度（`TFIDFRagIndex`，阈值 0.05 + Top-3），后续可平滑迁移到 PolarDB pgvector。`mock_sms.send_approval_alert` 为官方用云 Skill 封装（阿里云短信 Dysmsapi）：有 `SMS_ACCESS_KEY_ID/SECRET` 凭证真调 REST（RPC V1 签名），无凭证降级本地外呼记录（`channel_type=local_mock` 诚实标注，`tools/sms_alert.py`）。
 
 ## 4. 错误处理
 
@@ -72,6 +75,9 @@
 - **`create_order`**：以 `order_key`（lead_id + quote_id 组合）保证幂等；重复调用返回同一 `order_id`，防止 Agent 重复下单。
 - **`approve`/`reject`**：对已决策审批（approved/rejected）返回当前状态，不二次变更（幂等）。
 - **`reserve_car`**：超时自动释放（L1 可逆）。
+- **`send_approval_alert`**：以 `alert_key`（=approval_id）保证幂等；同一审批单只发一次告警短信，重复调用返回 `already_sent` + 首次结果（防重发骚扰审批人）。
+- **`mock_tradein.request_uplift`**：以（`assessment_id` + `requested_offer`）保证幂等；同一评估单同估值的超授权重复申请返回原审批任务（`deduplicated: true`），不重复创建（置换+金融复合场景 DEAL-2004）。
+- **置换估值审批与订单门禁联动**：`request_uplift` 超授权生成的 L2 审批（`trade_in_valuation_override`）写入共享审批池，`create_order` 自动关联进 `approval_refs`，`confirm_order` 门禁自动生效——置换估值审批通过前订单禁止确认（锁单门禁）。
 
 ## 7. 回滚能力与门禁
 
@@ -104,7 +110,10 @@ python3 tools/mock_tool_server.py --port 18089 &
 curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_finance.reject \
   -H 'Content-Type: application/json' -d '{"approval_id":"APR-xxx","approver":"mgr","reason":"超底线"}'
 curl http://127.0.0.1:18089/tools/family_suv_deal/audit
-# MCP 等价验证（22 工具，迁移只需协议适配）
+# 审批告警短信（官方用云 Skill：阿里云短信，幂等防重发）
+curl -X POST http://127.0.0.1:18089/tools/family_suv_deal/mock_sms.send_approval_alert \
+  -H 'Content-Type: application/json' -d '{"approval_id":"APR-xxx","deal_id":"DEAL-2001","risk_type":"discount_override","summary":"优惠超授权1.5%"}'
+# MCP 等价验证（25 工具，迁移只需协议适配）
 python3 tools/mcp_client_test.py
 ```
 

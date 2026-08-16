@@ -1,0 +1,907 @@
+{
+  "note": "Agent 决策层评估：从 AgentTeams transcript 按 (场景,Agent) 提取实际工具选择序列，与场景 Golden 标准对比；顺序约束/RAG 覆盖基于工具网关 trace 时序。knowledge-miner 环节无 mock 工具调用，以 transcript 参与度评估。",
+  "data_sources": {
+    "transcript": "agentteams_20260816_transcript.json",
+    "traces": [
+      "trace_family_suv_deal_20260816.json",
+      "trace_first_car_finance_20260816.json",
+      "trace_trade_in_renewal_20260816.json"
+    ],
+    "golden_basis": [
+      "at/AgentTeam.md 工作流与场景闭环路径",
+      "scenarios/*.json",
+      "tools/tool_catalog.json"
+    ]
+  },
+  "generated_at": "2026-08-16T22:41:54",
+  "scenarios": {
+    "family_suv_deal": {
+      "deal_id": "DEAL-2001",
+      "title": "二胎家庭 SUV 全链路成交",
+      "tool_selection_accuracy": 1.0,
+      "hit_count": 15,
+      "expected_count": 15,
+      "order_constraints": {
+        "pass": 4,
+        "total": 4,
+        "details": [
+          {
+            "constraint": "lead_before_stage",
+            "desc": "先读取线索再更新分级",
+            "pass": true,
+            "detail": "2026-08-16T09:40:36+0800 -> 2026-08-16T09:40:51+0800"
+          },
+          {
+            "constraint": "quote_before_approval",
+            "desc": "报价先于审批申请",
+            "pass": true,
+            "detail": "2026-08-16T11:18:29+0800 -> 2026-08-16T16:34:47+0800"
+          },
+          {
+            "constraint": "testdrive_before_order",
+            "desc": "试驾预约先于订单草稿",
+            "pass": true,
+            "detail": "2026-08-16T16:34:38+0800 -> 2026-08-16T16:41:48+0800"
+          },
+          {
+            "constraint": "order_before_verify",
+            "desc": "订单先于成交验证",
+            "pass": true,
+            "detail": "2026-08-16T16:41:48+0800 -> 2026-08-16T16:41:54+0800"
+          }
+        ]
+      },
+      "rag_coverage": {
+        "expected": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_product",
+          "mock_knowledge.search_sop"
+        ],
+        "covered": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_product",
+          "mock_knowledge.search_sop"
+        ],
+        "missing": [],
+        "call_counts": {
+          "mock_knowledge.search_sop": 5,
+          "mock_knowledge.search_case": 5,
+          "mock_knowledge.search_product": 1
+        },
+        "empty_result_calls": 0,
+        "coverage_rate": 1.0
+      },
+      "stages": {
+        "lead-intake": {
+          "role": "归并多渠道会话、去重分级，输出统一线索",
+          "actual_tool_sequence": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_knowledge.search_sop",
+            "mock_wechat.get_session",
+            "mock_crm.update_lead_stage"
+          ],
+          "transcript_activity": {
+            "messages": 178,
+            "tool_calls": 74
+          },
+          "expected": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "hit": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "profile-builder": {
+          "role": "构建客户画像（预算/家庭/场景/偏好），召回客户历史记忆",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_crm.get_customer_history",
+            "mock_knowledge.search_case",
+            "mock_crm.get_lead",
+            "mock_crm.get_customer_history",
+            "mock_knowledge.search_case"
+          ],
+          "transcript_activity": {
+            "messages": 109,
+            "tool_calls": 48
+          },
+          "expected": [
+            "mock_crm.get_customer_history"
+          ],
+          "hit": [
+            "mock_crm.get_customer_history"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "intent-analyst": {
+          "role": "识别购车阶段与意向评分，确定跟进优先级",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_knowledge.search_sop"
+          ],
+          "transcript_activity": {
+            "messages": 128,
+            "tool_calls": 60
+          },
+          "expected": [
+            "mock_knowledge.search_sop"
+          ],
+          "hit": [
+            "mock_knowledge.search_sop"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "strategy-planner": {
+          "role": "输出车型推荐、报价与跟进路径（RAG 证据支撑）",
+          "actual_tool_sequence": [
+            "mock_inventory.list_models",
+            "mock_crm.get_lead",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote",
+            "mock_knowledge.search_product"
+          ],
+          "transcript_activity": {
+            "messages": 222,
+            "tool_calls": 95
+          },
+          "expected": [
+            "mock_inventory.list_models",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "hit": [
+            "mock_inventory.list_models",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "missed": [],
+          "total": 4,
+          "accuracy": 1.0
+        },
+        "negotiation-executor": {
+          "role": "试驾预约/标准报价/授权内优惠；超授权生成 L2 审批；金融方案与征信审批",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_price.get_policy",
+            "mock_testdrive.list_slots",
+            "mock_testdrive.book_slot",
+            "mock_price.calc_quote",
+            "mock_finance.calc_plan",
+            "mock_finance.submit_approval",
+            "mock_finance.check_approval"
+          ],
+          "transcript_activity": {
+            "messages": 246,
+            "tool_calls": 107
+          },
+          "expected": [
+            "mock_testdrive.list_slots",
+            "mock_testdrive.book_slot",
+            [
+              "mock_price.apply_discount",
+              "mock_finance.submit_approval"
+            ]
+          ],
+          "hit": [
+            "mock_testdrive.list_slots",
+            "mock_testdrive.book_slot",
+            "mock_finance.submit_approval"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "order-executor": {
+          "role": "幂等创建订单草稿、库存预留、状态跟踪与成交验证",
+          "actual_tool_sequence": [
+            "mock_inventory.reserve_car",
+            "mock_price.calc_quote",
+            "mock_order.create_order",
+            "mock_order.get_order",
+            "mock_verify.check_deal"
+          ],
+          "transcript_activity": {
+            "messages": 172,
+            "tool_calls": 80
+          },
+          "expected": [
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "hit": [
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "missed": [],
+          "total": 2,
+          "accuracy": 1.0
+        },
+        "customer-ops": {
+          "role": "售后触达与复购运营（企微模板消息）",
+          "actual_tool_sequence": [
+            "mock_crm.get_customer_history",
+            "mock_wechat.get_session",
+            "mock_knowledge.search_sop",
+            "mock_knowledge.search_case",
+            "mock_wechat.send_template_message"
+          ],
+          "transcript_activity": {
+            "messages": 203,
+            "tool_calls": 88
+          },
+          "expected": [
+            "mock_wechat.send_template_message"
+          ],
+          "hit": [
+            "mock_wechat.send_template_message"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "knowledge-miner": {
+          "role": "复盘并脱敏沉淀成交案例（无 mock 工具调用，以 transcript 消息参与度评估）",
+          "actual_tool_sequence": [],
+          "transcript_activity": {
+            "messages": 76,
+            "tool_calls": 35
+          },
+          "expected": [],
+          "hit": 0,
+          "total": 0,
+          "accuracy": null,
+          "note": "no_tool_stage（案例沉淀走文件产出，无 mock 工具调用）"
+        }
+      }
+    },
+    "first_car_finance": {
+      "deal_id": "DEAL-2002",
+      "title": "首购金融方案",
+      "tool_selection_accuracy": 1.0,
+      "hit_count": 16,
+      "expected_count": 16,
+      "order_constraints": {
+        "pass": 4,
+        "total": 4,
+        "details": [
+          {
+            "constraint": "lead_before_stage",
+            "desc": "先读取线索再更新分级",
+            "pass": true,
+            "detail": "2026-08-16T16:51:05+0800 -> 2026-08-16T16:51:35+0800"
+          },
+          {
+            "constraint": "quote_before_approval",
+            "desc": "报价先于征信审批",
+            "pass": true,
+            "detail": "2026-08-16T17:19:32+0800 -> 2026-08-16T17:29:02+0800"
+          },
+          {
+            "constraint": "approval_before_order",
+            "desc": "征信审批先于订单草稿",
+            "pass": true,
+            "detail": "2026-08-16T17:29:02+0800 -> 2026-08-16T17:32:00+0800"
+          },
+          {
+            "constraint": "order_before_verify",
+            "desc": "订单先于成交验证",
+            "pass": true,
+            "detail": "2026-08-16T17:32:00+0800 -> 2026-08-16T17:32:06+0800"
+          }
+        ]
+      },
+      "rag_coverage": {
+        "expected": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_sop"
+        ],
+        "covered": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_sop"
+        ],
+        "missing": [],
+        "call_counts": {
+          "mock_knowledge.search_sop": 2,
+          "mock_knowledge.search_case": 1
+        },
+        "empty_result_calls": 0,
+        "coverage_rate": 1.0
+      },
+      "stages": {
+        "lead-intake": {
+          "role": "归并多渠道会话、去重分级，输出统一线索",
+          "actual_tool_sequence": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_wechat.get_session",
+            "mock_crm.update_lead_stage"
+          ],
+          "transcript_activity": {
+            "messages": 178,
+            "tool_calls": 74
+          },
+          "expected": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "hit": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "profile-builder": {
+          "role": "构建客户画像（预算/家庭/场景/偏好），召回客户历史记忆",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_crm.get_customer_history",
+            "mock_knowledge.search_case"
+          ],
+          "transcript_activity": {
+            "messages": 109,
+            "tool_calls": 48
+          },
+          "expected": [
+            "mock_crm.get_customer_history"
+          ],
+          "hit": [
+            "mock_crm.get_customer_history"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "intent-analyst": {
+          "role": "识别购车阶段与意向评分，确定跟进优先级",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_knowledge.search_sop"
+          ],
+          "transcript_activity": {
+            "messages": 128,
+            "tool_calls": 60
+          },
+          "expected": [
+            "mock_knowledge.search_sop"
+          ],
+          "hit": [
+            "mock_knowledge.search_sop"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "strategy-planner": {
+          "role": "输出车型推荐、报价与跟进路径（RAG 证据支撑）",
+          "actual_tool_sequence": [
+            "mock_inventory.list_models",
+            "mock_crm.get_lead",
+            "mock_price.get_policy",
+            "mock_price.calc_quote",
+            "mock_inventory.check_stock",
+            "mock_price.calc_quote",
+            "mock_inventory.check_stock"
+          ],
+          "transcript_activity": {
+            "messages": 222,
+            "tool_calls": 95
+          },
+          "expected": [
+            "mock_inventory.list_models",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "hit": [
+            "mock_inventory.list_models",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "missed": [],
+          "total": 4,
+          "accuracy": 1.0
+        },
+        "negotiation-executor": {
+          "role": "试驾预约/标准报价/授权内优惠；超授权生成 L2 审批；金融方案与征信审批",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_price.get_policy",
+            "mock_price.calc_quote",
+            "mock_finance.calc_plan",
+            "mock_price.calc_quote",
+            "mock_finance.submit_approval",
+            "mock_finance.check_approval"
+          ],
+          "transcript_activity": {
+            "messages": 246,
+            "tool_calls": 107
+          },
+          "expected": [
+            "mock_finance.calc_plan",
+            "mock_finance.submit_approval",
+            "mock_finance.check_approval"
+          ],
+          "hit": [
+            "mock_finance.calc_plan",
+            "mock_finance.submit_approval",
+            "mock_finance.check_approval"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "order-executor": {
+          "role": "幂等创建订单草稿、库存预留、状态跟踪与成交验证",
+          "actual_tool_sequence": [
+            "mock_inventory.reserve_car",
+            "mock_price.calc_quote",
+            "mock_order.create_order",
+            "mock_order.get_order",
+            "mock_verify.check_deal"
+          ],
+          "transcript_activity": {
+            "messages": 172,
+            "tool_calls": 80
+          },
+          "expected": [
+            "mock_inventory.reserve_car",
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "hit": [
+            "mock_inventory.reserve_car",
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "customer-ops": {
+          "role": "售后触达与复购运营（企微模板消息）",
+          "actual_tool_sequence": [
+            "mock_crm.get_customer_history",
+            "mock_wechat.get_session",
+            "mock_wechat.send_template_message"
+          ],
+          "transcript_activity": {
+            "messages": 203,
+            "tool_calls": 88
+          },
+          "expected": [
+            "mock_wechat.send_template_message"
+          ],
+          "hit": [
+            "mock_wechat.send_template_message"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "knowledge-miner": {
+          "role": "复盘并脱敏沉淀成交案例（无 mock 工具调用，以 transcript 消息参与度评估）",
+          "actual_tool_sequence": [],
+          "transcript_activity": {
+            "messages": 76,
+            "tool_calls": 35
+          },
+          "expected": [],
+          "hit": 0,
+          "total": 0,
+          "accuracy": null,
+          "note": "no_tool_stage（案例沉淀走文件产出，无 mock 工具调用）"
+        }
+      }
+    },
+    "trade_in_renewal": {
+      "deal_id": "DEAL-2003",
+      "title": "老客户置换 + 售后",
+      "tool_selection_accuracy": 0.9167,
+      "hit_count": 11,
+      "expected_count": 12,
+      "order_constraints": {
+        "pass": 4,
+        "total": 4,
+        "details": [
+          {
+            "constraint": "lead_before_stage",
+            "desc": "先读取线索再更新分级",
+            "pass": true,
+            "detail": "2026-08-16T17:51:00+0800 -> 2026-08-16T17:51:26+0800"
+          },
+          {
+            "constraint": "quote_before_discount",
+            "desc": "报价先于优惠让步",
+            "pass": true,
+            "detail": "2026-08-16T18:26:14+0800 -> 2026-08-16T18:26:26+0800"
+          },
+          {
+            "constraint": "discount_before_order",
+            "desc": "优惠审批先于订单草稿",
+            "pass": true,
+            "detail": "2026-08-16T18:26:26+0800 -> 2026-08-16T18:29:06+0800"
+          },
+          {
+            "constraint": "order_before_verify",
+            "desc": "订单先于成交验证",
+            "pass": true,
+            "detail": "2026-08-16T18:29:06+0800 -> 2026-08-16T18:29:12+0800"
+          }
+        ]
+      },
+      "rag_coverage": {
+        "expected": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_sop"
+        ],
+        "covered": [
+          "mock_knowledge.search_case",
+          "mock_knowledge.search_sop"
+        ],
+        "missing": [],
+        "call_counts": {
+          "mock_knowledge.search_sop": 2,
+          "mock_knowledge.search_case": 1
+        },
+        "empty_result_calls": 0,
+        "coverage_rate": 1.0
+      },
+      "stages": {
+        "lead-intake": {
+          "role": "归并多渠道会话、去重分级，输出统一线索",
+          "actual_tool_sequence": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_knowledge.search_sop",
+            "mock_crm.update_lead_stage"
+          ],
+          "transcript_activity": {
+            "messages": 178,
+            "tool_calls": 74
+          },
+          "expected": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "hit": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "missed": [],
+          "total": 3,
+          "accuracy": 1.0
+        },
+        "profile-builder": {
+          "role": "构建客户画像（预算/家庭/场景/偏好），召回客户历史记忆",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_crm.get_customer_history",
+            "mock_knowledge.search_case"
+          ],
+          "transcript_activity": {
+            "messages": 109,
+            "tool_calls": 48
+          },
+          "expected": [
+            "mock_crm.get_customer_history"
+          ],
+          "hit": [
+            "mock_crm.get_customer_history"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "intent-analyst": {
+          "role": "识别购车阶段与意向评分，确定跟进优先级",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_knowledge.search_sop"
+          ],
+          "transcript_activity": {
+            "messages": 128,
+            "tool_calls": 60
+          },
+          "expected": [
+            "mock_knowledge.search_sop"
+          ],
+          "hit": [
+            "mock_knowledge.search_sop"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "strategy-planner": {
+          "role": "输出车型推荐、报价与跟进路径（RAG 证据支撑）",
+          "actual_tool_sequence": [
+            "mock_inventory.list_models",
+            "mock_price.get_policy"
+          ],
+          "transcript_activity": {
+            "messages": 222,
+            "tool_calls": 95
+          },
+          "expected": [
+            "mock_inventory.list_models",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "hit": [
+            "mock_inventory.list_models",
+            "mock_price.get_policy"
+          ],
+          "missed": [
+            "mock_price.calc_quote"
+          ],
+          "total": 3,
+          "accuracy": 0.6667
+        },
+        "negotiation-executor": {
+          "role": "试驾预约/标准报价/授权内优惠；超授权生成 L2 审批；金融方案与征信审批",
+          "actual_tool_sequence": [
+            "mock_crm.get_lead",
+            "mock_price.get_policy",
+            "mock_price.calc_quote",
+            "mock_price.apply_discount"
+          ],
+          "transcript_activity": {
+            "messages": 246,
+            "tool_calls": 107
+          },
+          "expected": [
+            "mock_price.apply_discount"
+          ],
+          "hit": [
+            "mock_price.apply_discount"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "order-executor": {
+          "role": "幂等创建订单草稿、库存预留、状态跟踪与成交验证",
+          "actual_tool_sequence": [
+            "mock_inventory.reserve_car",
+            "mock_price.calc_quote",
+            "mock_order.create_order",
+            "mock_order.get_order",
+            "mock_verify.check_deal"
+          ],
+          "transcript_activity": {
+            "messages": 172,
+            "tool_calls": 80
+          },
+          "expected": [
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "hit": [
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "missed": [],
+          "total": 2,
+          "accuracy": 1.0
+        },
+        "customer-ops": {
+          "role": "售后触达与复购运营（企微模板消息）",
+          "actual_tool_sequence": [
+            "mock_crm.get_customer_history",
+            "mock_wechat.get_session",
+            "mock_wechat.send_template_message"
+          ],
+          "transcript_activity": {
+            "messages": 203,
+            "tool_calls": 88
+          },
+          "expected": [
+            "mock_wechat.send_template_message"
+          ],
+          "hit": [
+            "mock_wechat.send_template_message"
+          ],
+          "missed": [],
+          "total": 1,
+          "accuracy": 1.0
+        },
+        "knowledge-miner": {
+          "role": "复盘并脱敏沉淀成交案例（无 mock 工具调用，以 transcript 消息参与度评估）",
+          "actual_tool_sequence": [],
+          "transcript_activity": {
+            "messages": 76,
+            "tool_calls": 35
+          },
+          "expected": [],
+          "hit": 0,
+          "total": 0,
+          "accuracy": null,
+          "note": "no_tool_stage（案例沉淀走文件产出，无 mock 工具调用）"
+        }
+      }
+    }
+  },
+  "llm_judge": {
+    "prompt_template_ref": "eval_harness.LLM_JUDGE_PROMPT（与 DEAL-2001 同一模式）",
+    "deals": {
+      "DEAL-2002": {
+        "judge_source": "llm",
+        "llm_model": "qwen-plus",
+        "scores": {
+          "tool_selection": 9.0,
+          "rag_relevance": 8.0,
+          "risk_compliance": 10.0
+        },
+        "evidence_file": "llm_judge_DEAL-2002.json"
+      },
+      "DEAL-2003": {
+        "judge_source": "llm",
+        "llm_model": "qwen-plus",
+        "scores": {
+          "tool_selection": 9.0,
+          "rag_relevance": 10.0,
+          "risk_compliance": 10.0
+        },
+        "evidence_file": "llm_judge_DEAL-2003.json"
+      }
+    }
+  },
+  "offline_replay": {
+    "note": "新增复合场景（置换+金融）尚无 AgentTeams 真实运行 trace；以 Golden 期望工具序列离线重放，验证期望序列可执行、顺序约束与 RAG 覆盖满足（工具名取自重放真实 span）。真实运行 trace 落盘后自动并入主评估。",
+    "scenarios": {
+      "trade_in_finance": {
+        "deal_id": "DEAL-2004",
+        "title": "置换+金融双审批复合场景",
+        "data_source": "offline_expected_replay",
+        "tool_selection_accuracy": 1.0,
+        "hit_count": 17,
+        "expected_count": 17,
+        "order_constraints": {
+          "pass": 6,
+          "total": 6,
+          "details": [
+            {
+              "constraint": "lead_before_stage",
+              "desc": "先读取线索再更新分级",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            },
+            {
+              "constraint": "quote_before_approval",
+              "desc": "报价先于征信审批",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            },
+            {
+              "constraint": "assess_before_uplift",
+              "desc": "置换评估先于估值上浮申请",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            },
+            {
+              "constraint": "uplift_before_order",
+              "desc": "置换估值审批先于订单草稿（锁单门禁）",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            },
+            {
+              "constraint": "approval_before_order",
+              "desc": "征信审批先于订单草稿",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            },
+            {
+              "constraint": "order_before_verify",
+              "desc": "订单先于成交验证",
+              "pass": true,
+              "detail": "2026-08-16T22:42:15+0800 -> 2026-08-16T22:42:15+0800"
+            }
+          ]
+        },
+        "rag_coverage": {
+          "expected": [
+            "mock_knowledge.search_case",
+            "mock_knowledge.search_product",
+            "mock_knowledge.search_sop"
+          ],
+          "covered": [
+            "mock_knowledge.search_case",
+            "mock_knowledge.search_product",
+            "mock_knowledge.search_sop"
+          ],
+          "missing": [],
+          "call_counts": {
+            "mock_knowledge.search_sop": 1,
+            "mock_knowledge.search_case": 1,
+            "mock_knowledge.search_product": 1
+          },
+          "empty_result_calls": 0,
+          "coverage_rate": 1.0
+        },
+        "rule_judge": {
+          "judge_source": "rule_based_offline_replay",
+          "scores": {
+            "tool_selection": 10,
+            "rag_relevance": 10,
+            "risk_compliance": 10
+          }
+        },
+        "stage_sequences": {
+          "lead-intake": [
+            "mock_crm.list_sessions",
+            "mock_crm.get_lead",
+            "mock_crm.update_lead_stage"
+          ],
+          "profile-builder": [
+            "mock_crm.get_customer_history"
+          ],
+          "intent-analyst": [
+            "mock_knowledge.search_sop",
+            "mock_knowledge.search_case"
+          ],
+          "strategy-planner": [
+            "mock_knowledge.search_product",
+            "mock_inventory.list_models",
+            "mock_inventory.check_stock",
+            "mock_price.get_policy",
+            "mock_price.calc_quote"
+          ],
+          "negotiation-executor": [
+            "mock_tradein.assess_vehicle",
+            "mock_tradein.request_uplift",
+            "mock_finance.calc_plan",
+            "mock_finance.submit_approval",
+            "mock_finance.check_approval"
+          ],
+          "order-executor": [
+            "mock_order.create_order",
+            "mock_verify.check_deal"
+          ],
+          "customer-ops": [
+            "mock_wechat.send_template_message"
+          ]
+        }
+      }
+    }
+  },
+  "metrics": {
+    "tool_selection_accuracy_avg": 0.9722,
+    "per_scenario": {
+      "DEAL-2001": 1.0,
+      "DEAL-2002": 1.0,
+      "DEAL-2003": 0.9167
+    },
+    "order_constraints_pass": {
+      "DEAL-2001": "4/4",
+      "DEAL-2002": "4/4",
+      "DEAL-2003": "4/4"
+    },
+    "rag_coverage_rate": {
+      "DEAL-2001": 1.0,
+      "DEAL-2002": 1.0,
+      "DEAL-2003": 1.0
+    }
+  }
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -9,7 +10,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 from urllib.parse import parse_qs, unquote, urlparse
 
-from mock_tools import LocalMockTools, SkillFailureHandler, list_scenarios
+from mock_tools import LocalMockTools, SkillFailureHandler, SMS_ALERT_SKILL, compact, list_scenarios
 from evidence_archive import EvidenceArchiveSkill
 
 
@@ -18,6 +19,134 @@ TRACE_DIR: Path = Path("run_evidence_live")
 ARCHIVE = EvidenceArchiveSkill()  # 证据归档 Skill 单例（有 OSS 凭证真调 REST，无凭证降级本地 bucket）
 # 审计轨迹追加落盘的偏移（按 scenario 记录已写入 actions 数量，仅追加新增项，幂等）
 _AUDIT_OFFSET: Dict[str, int] = {}
+
+# ---------------------------------------------------------------------------
+# 故障注入（测试专用，默认关闭）：回应"工具调用 100% 成功率只有 happy path"的评审风险点。
+#
+# 通过环境变量 FAULT_INJECTION 传入 JSON 配置（工具名 -> 故障规则），在网关层对
+# 匹配的工具调用注入真实故障，验证 SkillFailureHandler 三分类（retryable /
+# non_retryable / unknown）与"降级不阻断"链路。未设置该环境变量时注入完全关闭，
+# 行为与原版一致（每次调用仅多一次 dict 查找，零行为差异）。
+#
+# 注入行为全量留痕（三处，均可检索审计）：
+#   1. span attributes.fault_injected（GET /tools/{s}/trace）
+#   2. audit action "fault_injected"（GET /tools/{s}/audit + *_audit.jsonl 落盘）
+#   3. 结构化 WARN log event=fault_injected（GET /tools/{s}/logs，trace_id 关联）
+#
+# 配置 schema（值为字符串时等价 {"type": <字符串>}）：
+#   {
+#     "mock_crm.get_lead":             {"type": "timeout", "delay_ms": 300},
+#     "mock_price.get_policy":         {"type": "http_500"},
+#     "mock_knowledge.search_product": {"type": "empty_result"},
+#     "mock_finance.calc_plan":        {"type": "auth_error", "fail_times": 1}
+#   }
+#
+# 故障类型与预期分类（SkillFailureHandler 关键词匹配，见 mock_tools.py）：
+#   timeout      —— 延迟 delay_ms 后抛超时异常（含 "timeout" → retryable：
+#                   网关重试 1 次；持续注入时重试耗尽 → 降级 + 告警）
+#   http_500     —— 抛上游 500 异常（不含分类关键词 → unknown：不重试，直接降级 + 告警）
+#   empty_result —— 调用成功但返回空结果集（模拟 RAG 空检索/数据缺失，非错误）
+#   auth_error   —— 抛鉴权异常（含 "auth"/"permission" → non_retryable：降级 + 人工建议）
+#
+# 可选参数：
+#   delay_ms    timeout 注入前的真实延迟毫秒数（默认 100）
+#   fail_times  仅前 N 次调用注入，之后自动恢复（默认 -1 持续注入）；
+#               用于验证 retryable 瞬时故障的"重试后恢复"路径
+# ---------------------------------------------------------------------------
+FAULT_TYPES = {"timeout", "http_500", "empty_result", "auth_error"}
+_FAULT_INJECTED_COUNT: Dict[str, int] = {}  # 每工具已注入次数（fail_times 恢复判断）
+
+
+class FaultInjectionError(RuntimeError):
+    """故障注入异常（测试专用）。
+
+    message 保持真实故障语义（含 SkillFailureHandler 分类关键词，不伪装分类结果），
+    附带 fault_type / tool 元数据，供降级 span 标注与审计轨迹留痕。
+    """
+
+    def __init__(self, message: str, fault_type: str, tool: str) -> None:
+        super().__init__(message)
+        self.fault_type = fault_type
+        self.tool = tool
+
+
+def _load_fault_rules() -> Dict[str, Dict[str, Any]]:
+    """解析环境变量 FAULT_INJECTION（JSON：工具名 -> 故障规则）。
+
+    未设置或为空 → 返回 {}（注入完全关闭）；配置非法 → 启动即失败（fail fast，
+    避免测试在"以为注入了其实没有"的假象下静默通过）。
+    """
+    raw = os.environ.get("FAULT_INJECTION", "")
+    if not raw.strip():
+        return {}
+    try:
+        cfg = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"FAULT_INJECTION is not valid JSON: {exc}") from exc
+    if not isinstance(cfg, dict):
+        raise ValueError("FAULT_INJECTION must be a JSON object like {tool_name: fault_spec}")
+    rules: Dict[str, Dict[str, Any]] = {}
+    for name, spec in cfg.items():
+        rule = {"type": spec} if isinstance(spec, str) else dict(spec)
+        ftype = rule.get("type")
+        if ftype not in FAULT_TYPES:
+            raise ValueError(f"unknown fault type '{ftype}' for '{name}', available: {sorted(FAULT_TYPES)}")
+        rules[name] = rule
+    return rules
+
+
+_FAULT_RULES = _load_fault_rules()
+
+
+def _check_fault(name: str) -> Optional[Dict[str, Any]]:
+    """按规则判定本次调用是否注入故障（含 fail_times 自动恢复判断）。
+
+    返回规则 dict（注入）或 None（不注入）。注入即计数，供 fail_times 恢复。
+    """
+    rule = _FAULT_RULES.get(name)
+    if not rule:
+        return None
+    fail_times = int(rule.get("fail_times", -1))
+    if fail_times >= 0 and _FAULT_INJECTED_COUNT.get(name, 0) >= fail_times:
+        return None  # 已注入满 N 次，自动恢复（验证重试恢复路径）
+    _FAULT_INJECTED_COUNT[name] = _FAULT_INJECTED_COUNT.get(name, 0) + 1
+    return rule
+
+
+def _raise_fault(name: str, rule: Dict[str, Any]) -> None:
+    """构造并抛出注入异常（timeout 型先真实延迟 delay_ms 模拟慢上游）。"""
+    ftype = rule["type"]
+    if ftype == "timeout":
+        delay_ms = int(rule.get("delay_ms", 100))
+        time.sleep(delay_ms / 1000.0)
+        raise FaultInjectionError(
+            f"upstream '{name}' timeout after {delay_ms}ms (fault-injected)", ftype, name)
+    if ftype == "http_500":
+        raise FaultInjectionError(
+            f"upstream '{name}' returned HTTP 500 internal server error (fault-injected)", ftype, name)
+    raise FaultInjectionError(  # auth_error
+        f"upstream '{name}' auth token expired, permission denied (fault-injected)", ftype, name)
+
+
+def _apply_empty_result(tools: LocalMockTools, name: str, result: Any) -> Any:
+    """empty_result 注入：调用成功但返回空结果集（模拟 RAG 空检索，非错误）。
+
+    响应体保持真实世界的空结果语义（list -> []，dict -> {"results": []}），
+    注入痕迹留存在可观测层：span status=empty_result + attributes、audit action、
+    WARN log；原结果预览保留在 attributes.fault.original_result_preview（审计可见
+    "本来会返回什么"）。
+    """
+    replaced: Any = [] if isinstance(result, list) else {"results": []}
+    if tools.trace and tools.trace[-1].get("tool") == name:
+        span = tools.trace[-1]
+        span["status"] = "empty_result"
+        span.setdefault("attributes", {})["fault_injected"] = "empty_result"
+        span["attributes"]["fault.original_result_preview"] = compact(result)
+    tools._action("fault_injected", "L0",
+                  {"tool": name, "type": "empty_result", "outcome": "empty_result",
+                   "original_result_preview": compact(result)})
+    tools._log(event="fault_injected", level="WARN", attributes={"tool": name, "type": "empty_result"})
+    return replaced
 
 
 def persist_last_trace(scenario_id: str) -> None:
@@ -81,6 +210,9 @@ def call_tool(
         "mock_price.get_policy": lambda: tools.get_policy(),
         "mock_price.calc_quote": lambda: tools.calc_quote(payload["model_code"], payload.get("customer_tier", "normal")),
         "mock_price.apply_discount": lambda: tools.apply_discount(payload["quote_id"], float(payload["amount"]), payload.get("reason", "")),
+        # 置换评估（置换+金融复合场景 DEAL-2004）
+        "mock_tradein.assess_vehicle": lambda: tools.assess_vehicle(payload.get("old_model", ""), int(payload.get("mileage_km", 0))),
+        "mock_tradein.request_uplift": lambda: tools.request_uplift(payload["assessment_id"], float(payload["requested_offer"]), payload.get("reason", "")),
         # 金融审批
         "mock_finance.calc_plan": lambda: tools.calc_plan(float(payload["price"]), float(payload.get("down_payment", 0)), int(payload["months"])),
         "mock_finance.submit_approval": lambda: tools.submit_approval(payload["plan_id"], payload["customer_id"]),
@@ -105,6 +237,10 @@ def call_tool(
         # 企业微信
         "mock_wechat.get_session": lambda: tools.get_session(payload["customer_id"]),
         "mock_wechat.send_template_message": lambda: tools.send_template_message(payload["customer_id"], payload["template"], payload.get("params", {})),
+        # 审批告警短信（官方用云 Skill：阿里云短信，L2 门禁 needs_approval 时触达审批人）
+        "mock_sms.send_approval_alert": lambda: tools.send_approval_alert(
+            payload["approval_id"], payload.get("deal_id", ""), payload.get("risk_type", ""),
+            payload.get("summary", ""), payload.get("approver", "store_manager")),
         # 闭环验证
         "mock_verify.check_deal": lambda: tools.check_deal(payload["deal_id"]),
         "mock_verify.audit_trail": lambda: tools.audit_trail(payload.get("approval_id"), payload.get("order_id")),
@@ -119,7 +255,15 @@ def call_tool(
     while attempt <= 1:
         attempt += 1
         try:
+            rule = _check_fault(name)
+            if rule is not None and rule["type"] != "empty_result":
+                # 注入真实故障（timeout 型先真实延迟）：异常走下方统一的分类/重试/降级链路
+                tools._log(event="fault_injected", level="WARN",
+                           attributes={"tool": name, "type": rule["type"], "attempt": attempt})
+                _raise_fault(name, rule)
             result = handlers[name]()
+            if rule is not None and rule["type"] == "empty_result":
+                result = _apply_empty_result(tools, name, result)
             break
         except Exception as exc:
             last_exc = exc
@@ -139,6 +283,11 @@ def call_tool(
                 "attributes": {"tool.name": name, "error.message": str(exc),
                                "failure.status": failure["status"], "failure.gap": failure["gap"]},
             })
+            if isinstance(exc, FaultInjectionError):
+                # 注入故障留痕：降级 span 标注 + 审计轨迹事件（audit 端点/JSONL 可检索 fault_injected）
+                tools.trace[-1]["attributes"]["fault_injected"] = exc.fault_type
+                tools._action("fault_injected", "L0",
+                              {"tool": name, "type": exc.fault_type, "outcome": "degraded"})
             if trace_id:
                 tools.trace[-1]["attributes"]["gateway.session_id"] = tools.trace_id
             tools._metric(name, ok=False)
@@ -192,7 +341,10 @@ class MockToolHandler(BaseHTTPRequestHandler):
         parts = [unquote(part) for part in parsed.path.strip("/").split("/") if part]
         try:
             if parts == ["health"]:
-                self._send(HTTPStatus.OK, {"ok": True, "service": "carsales-mock-tool-gateway"})
+                self._send(HTTPStatus.OK, {
+                    "ok": True, "service": "carsales-mock-tool-gateway",
+                    "fault_injection": {"enabled": bool(_FAULT_RULES), "rules": sorted(_FAULT_RULES)},
+                })
                 return
             if parts == ["scenarios"]:
                 self._send(HTTPStatus.OK, {"ok": True, "result": list_scenarios()})
@@ -284,9 +436,15 @@ def main() -> None:
     global TRACE_DIR
     TRACE_DIR = Path(args.trace_dir)
     TRACE_DIR.mkdir(parents=True, exist_ok=True)  # 首次运行即创建，reset 分支直接 open 不再崩
+    # 短信外呼记录与 trace/audit 同目录落盘（--trace-dir 统一控制，证据不散落）
+    SMS_ALERT_SKILL.out_dir = TRACE_DIR
 
     server = ThreadingHTTPServer((args.host, args.port), MockToolHandler)
     print(f"CarSales mock tool gateway listening on http://{args.host}:{args.port}")
+    if _FAULT_RULES:
+        print(f"FAULT INJECTION ENABLED: {json.dumps(_FAULT_RULES, ensure_ascii=False)}")
+    else:
+        print("Fault injection: disabled (set FAULT_INJECTION env to enable)")
     print("Health: GET /health")
     print("Tool call: POST /tools/{scenario_id}/{tool_name}.{function_name}")
     print(f"Trace persistence: {TRACE_DIR}/{{scenario_id}}.jsonl")

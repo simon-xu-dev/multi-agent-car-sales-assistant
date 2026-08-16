@@ -1,7 +1,7 @@
 {
   "$schema": "Skill Registry for CarSales AgentTeams",
   "registry_version": "1.0.0",
-  "last_updated": "2025-08-12",
+  "last_updated": "2026-08-16",
   "governance": {
     "publish_gate": "FORMAL",
     "review_required": true,
@@ -227,6 +227,26 @@
       "retry_policy": {"max_retries": 1, "backoff": "exponential"},
       "idempotent": true,
       "mcp_mapping": "oss.object.put/get/list"
+    },
+    {
+      "name": "sms-approval-alert",
+      "version": "0.1.0",
+      "maturity": "demo",
+      "type": "official-cloud-skill",
+      "owner_agent": ["negotiation-executor", "order-executor"],
+      "risk_level": "L1",
+      "depends_on_tools": ["Aliyun SMS REST API (Dysmsapi SendSms)"],
+      "depends_on_skills": [],
+      "downstream_skills": ["evidence-archive"],
+      "failure_handling": {
+        "sms_unavailable": "重试一次后告警，外呼记录本地保留供人工补发，不阻塞审批主链",
+        "no_credentials": "channel_type=local_mock 诚实降级（外呼记录 JSONL 落盘可审计）",
+        "no_approver_phone": "显式报错转人工，不猜测号码",
+        "duplicate_alert": "alert_key=approval_id 幂等去重，不重发骚扰审批人"
+      },
+      "retry_policy": {"max_retries": 1, "backoff": "exponential"},
+      "idempotent": true,
+      "mcp_mapping": "sms.approval.alert"
     }
   ]
 }

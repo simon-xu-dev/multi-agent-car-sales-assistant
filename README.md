@@ -8,13 +8,13 @@
 
 1. AgentTeams 可以创建并管理 8 个职责明确的业务 LLM Agent，并在创建 Team 时生成 1 个独立 TeamLeader Worker。
 2. Worker 在 Docker 中也能通过 HTTP 工具网关主动取证，不依赖宿主机目录。
-3. 三个销售场景分三次独立处理，展示完整成交闭环、金融审批闭环与老客户运营闭环。
+3. 四个销售场景分四次独立处理，展示完整成交闭环、金融审批闭环、老客户运营闭环与置换+金融双审批复合联动闭环（DEAL-2004 为离线重放验证，见 EVIDENCE.md E34）。
 4. 低风险动作（试驾预约、标准报价、模板消息）进入自动化执行语义；高风险动作（超授权优惠、征信授权、订单确认）只生成审批计划；议价触及底线停止让步并转人工。
-5. 全链路工具调用可观测：每次调用写入 OTel-GenAI 风格 Span（trace_id/span_id/span_kind/status/duration_ms/parent_span_id）+ 结构化 Log + Metrics，W3C `traceparent` 传播 `trace_id`+`parent_span_id` 使工具 span 与 Agent span 同属一个 trace 树。
+5. 全链路工具调用可观测：每次调用写入 OTel-GenAI 风格 Span（trace_id/span_id/span_kind/status/duration_ms/parent_span_id）+ 结构化 Log + Metrics，W3C `traceparent` 传播 `trace_id`+`parent_span_id` 使工具 span 与 Agent span 同属一个 trace 树；离线由 `agent_span_builder.py` 构建 Agent→Skill→Tool 三层 trace 树（TeamLeader root，182 span，工具 span 挂载率 100%）。
 6. 安全审计闭环：高风险动作（L2）禁止默认放行——`approve`/`reject` 决策驱动 `confirm_order`/`rollback_order`（决策与执行分离），`audit_trail` 全量留痕（append-only JSONL，trace_id 关联）；三安全分支端到端：驳回→回滚、通过→确认→成交、挂起→转人工。
-7. 可运行验证闭环：离线自检（56 项断言）+ LLM 自主决策演示（三个决策点）+ MCP Server（22 工具，迁移只需协议适配）+ Golden/Badcase 评估（13+7=1.0）+ OSS 证据归档 + TF-IDF RAG + Agent 记忆 + 浏览器实时网关面板，全部本地可复现。
+7. 可运行验证闭环：离线自检（87 项断言 = 4 场景 + 审计闭环）+ LLM 自主决策演示（三个决策点）+ MCP Server（25 工具全集，迁移只需协议适配）+ Golden/Badcase 评估（13+7=1.0）+ Agent 决策层评估（命中率平均 0.9722）+ OSS 证据归档 + 短信审批告警 + 三后端可插拔 RAG（pgvector PoC）+ 故障注入测试（7 用例 52 断言）+ Agent 记忆 + 浏览器实时网关面板，全部本地可复现。
 8. LLM 自主决策（三个决策点）：①TeamLeader 审批门禁由百炼 LLM 基于忠实业务上下文自主推理 approve/reject/pending；②strategy_planner 车型推荐由 LLM 自主评估匹配度 + 风险标记（DEAL-2002 诚实标 preference_mismatch）；③strategy_planner 工具调用顺序由 LLM 自主规划（DEAL-2003 LLM 把 get_policy 提前到 check_stock 之前，体现场景化编排）。`decision_source` 诚实标注 `llm`/`fallback_config`，无 key 仍 ALL PASS，reason/raw_response 留痕可回放——把「编排闭环」升级为「自主闭环」。
-9. OTel 真落地 + 官方用云 Skill 真集成：opentelemetry-sdk 1.27.0 重放导出 95 span（ConsoleSpanExporter + GenAI semconv：`gen_ai.system`/`agent.name`/`tool.name`/`request.model`）；OSS REST 签名已验证 + MinIO PUT/GET 往返成功（OSS v1 签名，有凭证真调、无凭证降级本地，`store_type` 诚实标注）；百炼=真阿里云模型服务集成。
+9. OTel 真落地 + 官方用云 Skill 真集成（2 个）：opentelemetry-sdk 1.27.0 重放导出 261 span（6 trace = 3 工具层 + 3 三层树；ConsoleSpanExporter + GenAI semconv：`gen_ai.system`/`agent.name`/`tool.name`/`request.model`）；OSS REST 签名已验证 + MinIO PUT/GET 往返成功（OSS v1 签名，有凭证真调、无凭证降级本地，`store_type` 诚实标注）；阿里云短信 Dysmsapi 真 REST 路径（RPC V1 签名，有凭证真调、无凭证降级本地外呼记录，`channel_type` 诚实标注）；百炼=真阿里云模型服务集成。
 
 ## Demo 场景
 
@@ -23,6 +23,7 @@
 | `family_suv_deal` | 二胎家庭 SUV 购车，多渠道线索（官网+企微+电话） | 归并线索、构建画像、推荐车型、自动预约试驾、标准报价、超授权优惠生成 L2 审批、订单草稿、案例沉淀 |
 | `first_car_finance` | 首购客户金融方案（短视频渠道） | 画像与意图识别、金融方案对比、征信授权生成 L2 审批、订单草稿（审批前不确认） |
 | `trade_in_renewal` | 老客户置换 + 售后运营 | 历史画像 RAG 召回、置换方案测算、议价触及底线转人工、售后权益模板触达、复购沉淀 |
+| `trade_in_finance` | 老客户置换升级高端 SUV + 金融分期（复合场景） | 历史画像召回、置换评估（授权内 L1 / 超授权估值上浮 L2 审批）、报价与缺口测算、金融方案对比、征信授权 L2 审批、叠加让步触底转人工、双审批齐备前订单禁止 confirm、交付关怀 |
 
 ## 核心 Agent（8 业务 Worker + 1 TeamLeader）
 
@@ -43,24 +44,31 @@
 ```
 carsales-demo/
 ├── agents/            # 8 个业务 Agent 定义（评审材料，附录 A 模板）
-├── skills/            # 11 个可复用 Skill + evidence-archive（OSS 官方用云 Skill 封装）
-├── tools/             # HTTP mock 工具网关 + 可观测 + MCP + 评估 + LLM 决策
-│   ├── mock_tools.py             # 业务逻辑 + TF-IDF RAG + OTel span/log/metrics + approve/reject/confirm/audit
-│   ├── mock_tool_server.py        # HTTP 网关（traceparent 传播 + /trace /logs /metrics /audit /archive）
-│   ├── mcp_server.py             # FastMCP stdio Server（22 工具，复用 LocalMockTools）
-│   ├── mcp_client_test.py        # MCP 端到端验证（9 断言）
+├── skills/            # 13 个可复用 Skill（11 自定义 + 2 官方用云：OSS 证据归档 / 短信审批告警）
+├── tools/             # HTTP mock 工具网关 + 可观测 + MCP + 评估 + LLM 决策（根目录 16 个核心脚本）
+│   ├── mock_tools.py             # 业务逻辑（11 域 25 函数，含 mock_tradein 置换评估）+ RAG + OTel span/log/metrics + approve/reject/confirm/audit
+│   ├── mock_tool_server.py        # HTTP 网关（traceparent 传播 + /trace /logs /metrics /audit /archive + FAULT_INJECTION 故障注入框架）
+│   ├── mcp_server.py             # FastMCP stdio Server（25 工具，复用 LocalMockTools）
+│   ├── mcp_client_test.py        # MCP 端到端验证（12 断言：25 工具全集精确断言 + 短信幂等闭环）
+│   ├── vector_rag.py             # RAG 三后端可插拔（local_tfidf / local_embedding / pgvector）+ 等价性验证 --equivalence
+│   ├── fault_injection_test.py   # 故障注入测试（4 故障类型 × 7 用例 52 断言，非 happy path 韧性证据）
 │   ├── llm_decision_demo.py     # LLM 自主决策能力独立演示（三个决策点，基于真实 AgentTeams 场景数据）
 │   ├── llm_client.py             # 百炼 LLM 决策客户端（审批门禁 + 车型推荐 + 工具调用顺序三个决策点 + .env 加载 + 降级）
 │   ├── eval_harness.py           # Golden/Badcase 评估 + LLM-as-Judge 模板
+│   ├── agent_eval.py             # Agent 决策层评估（transcript 工具序列 vs Golden + LLM-as-Judge + DEAL-2004 离线重放）
+│   ├── agent_span_builder.py     # Agent→Skill→Tool 三层 trace 树构建 + 链路完整性校验（--check-only）
 │   ├── evidence_archive.py       # OSS 真调用证据归档 Skill（OssObjectStore 真 REST + LocalObjectStore 降级）
+│   ├── sms_alert.py              # 阿里云短信审批告警 Skill（真 Dysmsapi REST + 本地降级）
 │   ├── otel_exporter.py           # OTel 真落地：hand-written span → opentelemetry-sdk 真导出 + GenAI semconv
 │   ├── rag_regression_replay.py  # 真实 Trace RAG 空结果回归重放
-│   ├── selfcheck.py              # 离线自检（56 项断言，含审计闭环）
-│   ├── tool_catalog.json         # 工具目录与 MCP 映射
+│   ├── selfcheck.py              # 离线自检（87 项断言 = 4 场景 + 审计闭环，56+31）
+│   ├── pgvector_migration/       # PolarDB pgvector 迁移 DDL（2 表 + 2 函数 + HNSW 索引 + 角色权限）
+│   ├── ops/                      # 一次性运维脚本归档（73 个，mention 补丁/故障恢复/证据采集，见 ops/README.md，不参与运行时）
+│   ├── tool_catalog.json         # 工具目录与 MCP 映射（11 域 25 函数）
 │   └── MCP_MAPPING.md            # 等价 MCP 集成契约
 ├── demo/              # React 前端 Demo（实时网关面板）
 │   └── src/ components/LiveGateway.jsx, lib/gatewayClient.js, data/liveScripts.js
-├── scenarios/         # 3 个销售场景数据（含预期结果）
+├── scenarios/         # 4 个销售场景数据（含预期结果；DEAL-2004 为复合场景，离线重放验证）
 ├── at/                # AgentTeams 协同层
 │   ├── create_agents_messages.md   # 8 Worker + Team 完整创建消息
 │   ├── team_spec.json              # Team 拓扑与工作流
@@ -84,9 +92,9 @@ carsales-demo/
 ```bash
 cd <DEMO_DIR>
 
-# 1. 离线自检：56 项断言（3 场景 + 审计闭环）
+# 1. 离线自检：87 项断言（4 场景 + 审计闭环 = 56 + DEAL-2004 复合场景 31）
 python3 tools/selfcheck.py
-# → RESULT: 56 passed, 0 failed
+# → RESULT: 87 passed, 0 failed
 
 # 2. LLM 自主决策演示：三个决策点（审批门禁 + 车型推荐 + 工具顺序）
 python3 tools/llm_decision_demo.py
@@ -116,9 +124,20 @@ python3 tools/eval_harness.py
 ```bash
 pip install opentelemetry-sdk opentelemetry-semantic-conventions
 
-# 重放导出：工具网关 hand-written span 重放为真 OTel SDK Span
+# 重放导出：工具网关 hand-written span + 三层 trace 树重放为真 OTel SDK Span
 python3 tools/otel_exporter.py
-# → docs/RUN_EVIDENCE/otel_sdk_spans.jsonl（95 span，agent+tool+rag 全量）+ ConsoleSpanExporter
+# → docs/RUN_EVIDENCE/otel_sdk_spans.jsonl（261 span = 3 工具层 trace + 3 三层树，agent/skill/tool/rag）+ ConsoleSpanExporter
+```
+
+### 可选：Agent 层评估 + 三层 Trace 树校验（零依赖）
+
+```bash
+python3 tools/agent_eval.py
+# → Agent 层工具选择命中率 1.0/1.0/0.9167（平均 0.9722）+ 顺序约束 12/12 + RAG 覆盖 1.0×3
+# → 配 .env（DASHSCOPE_API_KEY）时 DEAL-2002/2003 由百炼真实 LLM-as-Judge 评判（judge_source=llm）
+
+python3 tools/agent_span_builder.py --check-only
+# → 三场景三层 trace 树链路完整性校验（工具 span 挂载率 100%）
 ```
 
 ### 可选：浏览器实时网关面板
@@ -137,7 +156,21 @@ cd demo && npm install && npm run dev
 ```bash
 pip install mcp
 python3 tools/mcp_client_test.py
-# → 9/9 通过，22 工具，证明迁移 MCP 只需协议适配
+# → 12/12 通过：25 工具全集精确断言 + sms_approval_alert 幂等闭环，证明迁移 MCP 只需协议适配
+```
+
+### 可选：RAG 三后端等价性 + 故障注入测试（零依赖）
+
+```bash
+# RAG pgvector 迁移 PoC：local_tfidf / local_embedding / pgvector 三后端 14 查询对比
+python3 tools/vector_rag.py --equivalence
+# → 生产后端 8/8 回归非空守护 + TF-IDF 空结果 9/9 被稠密链路修复 + 双非空 Top-3 overlap 1.0
+# → 生成 docs/RUN_EVIDENCE/rag_backend_equivalence.json（迁移方案见 docs/RAG_PGVECTOR_MIGRATION.md）
+
+# 故障注入：timeout / http_500 / empty_result / auth_error × 7 用例 52 断言
+python3 tools/fault_injection_test.py
+# → 降级契约（HTTP 200 + 结构化 degraded）/ 瞬时故障重试恢复 / 故障隔离 / 注入关闭零痕迹
+# → 生成 docs/RUN_EVIDENCE/fault_injection_report.json
 ```
 
 ### AgentTeams 真框架运行（三个场景，需 Docker）
@@ -324,16 +357,21 @@ curl http://127.0.0.1:18089/tools/family_suv_deal/audit
 
 | 验证 | 命令 | 证据 |
 | --- | --- | --- |
-| 离线自检 | `python3 tools/selfcheck.py` | 56/56 断言通过（3 场景 + 审计闭环） |
+| 离线自检 | `python3 tools/selfcheck.py` | **87/87 断言通过**（4 场景 + 审计闭环 = 56 + DEAL-2004 复合场景 31） |
 | LLM 自主决策演示 | `python3 tools/llm_decision_demo.py` | 三个 LLM 决策点（审批门禁 + 车型推荐 + 工具顺序）独立演示；`decision_source`=llm/fallback_config；三分支对齐（reject→rollback / approve→confirm / pending→human_handoff）；证据含完整上下文 + LLM 原始返回 |
-| OTel 真落地 | `python3 tools/otel_exporter.py` → `otel_sdk_spans.jsonl` | **重放 95 span**（工具网关 hand-written span → 真 OTel SDK 导出）；opentelemetry-sdk 1.27.0 + GenAI semconv（`gen_ai.system`/`agent.name`/`tool.name`/`request.model`） |
-| MCP Server | `python3 tools/mcp_client_test.py` | 9/9 通过，22 工具，证明迁移 MCP 只需协议适配 |
+| OTel 真落地 | `python3 tools/otel_exporter.py` → `otel_sdk_spans.jsonl` | **重放 261 span**（6 trace = 3 工具层 + 3 三层树 → 真 OTel SDK 导出）；opentelemetry-sdk 1.27.0 + GenAI semconv（`gen_ai.system`/`agent.name`/`tool.name`/`request.model`） |
+| MCP Server | `python3 tools/mcp_client_test.py`（需 `pip install mcp`） | **12/12 通过**：25 工具全集精确断言（missing/extra 双向防漂移）+ sms_approval_alert 幂等闭环，证明迁移 MCP 只需协议适配 |
+| RAG 三后端等价性 | `python3 tools/vector_rag.py --equivalence` | local_tfidf / local_embedding / pgvector 三后端 14 查询对比：生产后端 8/8 回归非空守护 + TF-IDF 空结果 9/9 被稠密链路修复 + 双非空 Top-3 overlap 1.0；迁移方案见 [docs/RAG_PGVECTOR_MIGRATION.md](docs/RAG_PGVECTOR_MIGRATION.md) |
+| 故障注入测试 | `python3 tools/fault_injection_test.py` | 4 故障类型（timeout/http_500/empty_result/auth_error）× 7 用例 52 断言全过：结构化降级不抛 5xx、瞬时故障重试恢复、故障按工具隔离、注入留痕三处（span/audit/log）、未设置 FAULT_INJECTION 行为与原版一致 |
 | 评估闭环 | `python3 tools/eval_harness.py` | Golden 13/13 + Badcase 7/7，综合 1.0（16 维度全 1.0）+ LLM-as-Judge online |
+| Agent 层评估 | `python3 tools/agent_eval.py` | transcript 工具序列 vs 场景 Golden：命中率 1.0/1.0/0.9167（平均 0.9722）+ 顺序约束 12/12 + RAG 覆盖 1.0×3；配 key 时 DEAL-2002/2003 真实百炼 LLM-as-Judge |
+| 三层 Trace 树 | `python3 tools/agent_span_builder.py --check-only` | Agent→Skill→Tool 三层树（TeamLeader root，182 span），工具 span 挂载率 100%，12/116 二级推导显式标注 |
 | 安全审计闭环 | `curl …/tools/{sid}/mock_finance.reject` → `/audit` | approve/reject→confirm/rollback→audit_trail 端到端，append-only 审计 JSONL |
 | 实时网关面板 | `python3 tools/mock_tool_server.py &` → `cd demo && npm run dev` | 浏览器「实时网关」Tab 回放管线 + Trace/Logs/Metrics + 归档 |
 | 证据归档（OSS 真调用） | `curl -X POST …/tools/family_suv_deal/archive -d '{"deal_id":"DEAL-2001"}'` | OssObjectStore 真阿里云 OSS REST（v1 签名），有凭证真调/无凭证降级本地，`store_type` 标注 |
+| 短信审批告警（真 REST 路径） | `curl -X POST …/tools/family_suv_deal/mock_sms.send_approval_alert -d '{"approval_id":"APR-xxx",…}'` | AliyunSmsSender 真阿里云 Dysmsapi REST（RPC V1 签名），有凭证真调/无凭证降级本地外呼记录，`channel_type` 标注；alert_key 幂等 |
 | **AgentTeams 真框架运行** | `docker ps \| grep hiclaw` → Matrix API 发任务 → 查 room transcript | **11 容器 v1.1.2 真 Docker 运行**（非概念映射）：**2026-08-16 一天内 3 场景全闭环**（24 节点 DAG 全绿 + 116 次工具调用 100% 成功 + 3 份 complete_project 报告），证据见 [docs/RUN_EVIDENCE/AGENTTEAMS_REAL_RUN_EVIDENCE_20260816.md](docs/RUN_EVIDENCE/AGENTTEAMS_REAL_RUN_EVIDENCE_20260816.md) |
-| **异常分支与自愈** | `tools/patch_mention_filter.py` + `tools/recover_*.sh` | 4 类真实运行故障（mention 过滤丢弃/假派发/LLM 超时/空回合）全部根因分析+代码级根治+回归验证，见 [docs/RUN_ISSUES_AND_SOLUTIONS.md](docs/RUN_ISSUES_AND_SOLUTIONS.md) |
+| **异常分支与自愈** | `tools/ops/patch_mention_filter.py` + `tools/ops/recover_*.sh` | 4 类真实运行故障（mention 过滤丢弃/假派发/LLM 超时/空回合）全部根因分析+代码级根治+回归验证，见 [docs/RUN_ISSUES_AND_SOLUTIONS.md](docs/RUN_ISSUES_AND_SOLUTIONS.md) |
 
 完整证据索引与复现步骤见 [docs/EVIDENCE.md](docs/EVIDENCE.md)。
 
@@ -341,16 +379,17 @@ curl http://127.0.0.1:18089/tools/family_suv_deal/audit
 
 | 当前内容 | 后续替换方向 | 迁移成本 |
 | --- | --- | --- |
-| HTTP mock 工具网关 | 真实 MCP Server 或 Higress MCP 代理 | 仅协议适配层（`mcp_server.py` 已实证 22 工具零业务重构） |
+| HTTP mock 工具网关 | 真实 MCP Server 或 Higress MCP 代理 | 仅协议适配层（`mcp_server.py` 已实证 25 工具零业务重构） |
 | `scenarios/*.json` | 真实 CRM、DMS、价格、金融审批、知识库数据源 | 数据源适配，工具接口不变 |
 | 8 个业务 Worker 的内联 AgentSpec/Skill | Nacos AI Registry 中的 Prompt、Skill、AgentSpec、AgentTeam Spec | 注册发布，Spec 结构不变 |
 | `skills/*/SKILL.md` 评审材料 | 发布到 Nacos AI Registry 或 AgentTeams Skill Registry，由 Worker 按版本/标签动态加载 | 版本化加载，Skill 契约不变 |
-| TF-IDF RAG（纯 Python） | PolarDB for PostgreSQL + pgvector 向量库 | 替换 `TFIDFRagIndex.search` 为向量库查询，接口不变 |
+| TF-IDF RAG（纯 Python） | PolarDB for PostgreSQL + pgvector 向量库 | 替换 `TFIDFRagIndex.search` 为向量库查询，接口不变；**迁移 PoC 已完成**（三后端可插拔 + 等价性验证 + DDL/索引/权限/回滚方案，见 [docs/RAG_PGVECTOR_MIGRATION.md](docs/RAG_PGVECTOR_MIGRATION.md)） |
 | Agent 记忆（JSONL + TF-IDF） | PolarDB 向量库 / 统一模型层长记忆 | 持久化替换，`recall_semantic` 接口不变 |
 | 工具网关 Trace + 审计 JSONL | LoongSuite / AgentScope Studio / AgentLoop 全链路可观测 | 语义已对齐 OTel GenAI，`otel_exporter.py` 已实证真 OTel SDK 导出，采集器替换 |
 | AgentTeams 真实 LLM 推理驱动 | 多模型路由 / 自部署模型 / 更强调度策略 | 编排契约与 trace 结构不变；**真框架已跑**（11 容器 v1.1.2 + Matrix + 2026-08-16 三场景全闭环，116 次工具调用 100% 成功）；三个 LLM 决策点已由百炼 LLM 自主驱动（`llm_client.py` + `llm_decision_demo.py`） |
 | LLM 决策点（百炼 qwen-plus，三个） | qwen-max / 自部署模型 / 多模型路由 | `LLM_MODEL` 环境变量切换，prompt 与降级逻辑不变 |
 | OSS 证据归档（真 REST + 本地降级） | MCP Server（oss_put/get/list tool）或阿里云 OSS SDK | OssObjectStore REST→MCP tool schema 适配，`store_type` 契约不变 |
+| 短信审批告警（真 REST + 本地降级） | MCP Server（sms.approval.alert tool）或阿里云短信 SDK | AliyunSmsSender REST→MCP tool schema 适配，`channel_type` 契约不变 |
 
 ## 开源与合规
 

@@ -10,10 +10,14 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from vector_rag import DenseRagIndex
+from sms_alert import SmsAlertSkill
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SCENARIO_DIR = PROJECT_ROOT / "scenarios"
+
+# 审批告警短信 Skill 单例（官方用云 Skill：有阿里云短信凭证真调 Dysmsapi，无凭证降级本地外呼记录）
+SMS_ALERT_SKILL = SmsAlertSkill()
 
 # 线索状态机：新线索 -> 已联系 -> 已识别需求 -> 试驾中 -> 议价中 -> 成交/流失/待审批
 LEAD_STAGES = [
@@ -35,6 +39,7 @@ STORE_ALIASES: Dict[str, List[str]] = {
     "store_001": ["store_001", "hz-binjiang", "杭州滨江旗舰店", "杭州滨江店", "滨江店", "binjiang"],
     "store_002": ["store_002", "sh-hongqiao", "上海虹桥店", "虹桥店", "hongqiao"],
     "store_003": ["store_003", "gz-tianhe", "广州天河店", "天河店", "tianhe"],
+    "store_004": ["store_004", "sz-nanshan", "深圳南山旗舰店", "深圳南山店", "南山店", "nanshan"],
 }
 
 # 检索停用词：无区分度的高频功能词，分词时忽略，避免稀释信号词
@@ -309,6 +314,13 @@ class BaseMockTools:
     def apply_discount(self, quote_id: str, amount: float, reason: str) -> Dict[str, Any]:
         raise NotImplementedError
 
+    # ---- mock_tradein ----
+    def assess_vehicle(self, old_model: str, mileage_km: int) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    def request_uplift(self, assessment_id: str, requested_offer: float, reason: str) -> Dict[str, Any]:
+        raise NotImplementedError
+
     # ---- mock_finance ----
     def calc_plan(self, price: float, down_payment: float, months: int) -> Dict[str, Any]:
         raise NotImplementedError
@@ -372,6 +384,11 @@ class BaseMockTools:
     def send_template_message(self, customer_id: str, template: str, params: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplementedError
 
+    # ---- mock_sms（官方用云 Skill：阿里云短信审批告警）----
+    def send_approval_alert(self, approval_id: str, deal_id: str = "", risk_type: str = "",
+                            summary: str = "", approver: str = "store_manager") -> Dict[str, Any]:
+        raise NotImplementedError
+
     # ---- mock_verify ----
     def check_deal(self, deal_id: str) -> Dict[str, Any]:
         raise NotImplementedError
@@ -390,6 +407,10 @@ class LocalMockTools(BaseMockTools):
         self.saved_cases: List[Dict[str, Any]] = []
         self.quotes: Dict[str, Dict[str, Any]] = {}
         self._quote_seq = 0
+        # 旧车置换评估记录（assessment_id -> 评估结果），供估值上浮申请关联校验
+        self.assessments: Dict[str, Dict[str, Any]] = {}
+        # 审批告警短信已发送记录（alert_key=approval_id -> 首次发送结果，幂等防重发）
+        self.sms_alerts: Dict[str, Dict[str, Any]] = {}
 
     def _scenario(self, key: str, default: Any) -> Any:
         return self.scenario.get(key, default)
@@ -540,6 +561,118 @@ class LocalMockTools(BaseMockTools):
             }
             self._action("apply_discount", "L2", {"quote_id": quote_id, "amount": amount, "approval_id": approval_id})
         return self._record("mock_price.apply_discount", {"quote_id": quote_id, "amount": amount, "reason": reason}, result)
+
+    # ---- mock_tradein ----
+    def assess_vehicle(self, old_model: str, mileage_km: int) -> Dict[str, Any]:
+        """旧车置换评估（L0 只读计算）：标准评估价 / 置换补贴 / 估值上浮授权上限。
+
+        幂等：纯计算无副作用，天然幂等。估值上浮申请走 request_uplift——
+        授权内 L1 自动应用，超授权生成 L2 审批 trade_in_valuation_override，
+        与订单 confirm 门禁联动（估值未批不得锁单）。
+        """
+        trade = self._scenario("trade_in", {})
+        standard = float(trade.get("assessment_offer", 0))
+        subsidy = float(trade.get("trade_in_subsidy", 0))
+        result = {
+            "assessment_id": f"TA-{uuid.uuid4().hex[:6].upper()}",
+            "old_model": old_model or trade.get("old_model", ""),
+            "mileage_km": mileage_km or trade.get("mileage_km", 0),
+            "standard_offer": standard,
+            "trade_in_subsidy": subsidy,
+            "total_trade_in_value": round(standard + subsidy, 2),
+            "authorized_uplift_max": float(trade.get("authorized_uplift_max", 0)),
+            "risk_level": "L0",
+            "message": "旧车置换评估完成（L0 只读计算）；估值上浮超出授权上限需 L2 审批。",
+        }
+        self.assessments[result["assessment_id"]] = result
+        return self._record(
+            "mock_tradein.assess_vehicle", {"old_model": old_model, "mileage_km": mileage_km}, result
+        )
+
+    def request_uplift(self, assessment_id: str, requested_offer: float, reason: str) -> Dict[str, Any]:
+        """置换估值上浮申请：授权内自动应用（L1）；超授权生成 L2 审批（与订单门禁联动）。
+
+        幂等：同一评估单的相同估值重复申请返回原审批结果，不重复创建审批任务。
+        审批写入共享审批池 self.approvals，create_order 会将其关联进 approval_refs，
+        confirm_order 门禁自动生效——置换估值审批通过前订单禁止确认（锁单门禁）。
+        """
+        assessment = self.assessments.get(assessment_id)
+        if not assessment:
+            raise ValueError(f"unknown assessment '{assessment_id}', run assess_vehicle first")
+        standard = float(assessment["standard_offer"])
+        authorized_max = float(assessment["authorized_uplift_max"])
+        uplift = round(float(requested_offer) - standard, 2)
+        # 幂等去重：同评估单同估值的超授权申请返回已有审批（防重复建单骚扰审批人）
+        for aid, ap in self.approvals.items():
+            if (
+                ap.get("type") == "trade_in_valuation_override"
+                and ap.get("assessment_id") == assessment_id
+                and float(ap.get("requested_offer", 0)) == float(requested_offer)
+            ):
+                result = {
+                    "status": "needs_approval" if ap["status"] == "pending" else ap["status"],
+                    "action": "request_uplift",
+                    "assessment_id": assessment_id,
+                    "requested_offer": requested_offer,
+                    "standard_offer": standard,
+                    "uplift": uplift,
+                    "authorized_uplift_max": authorized_max,
+                    "risk_level": "L2",
+                    "approval_id": aid,
+                    "deduplicated": True,
+                    "message": f"估值上浮申请已存在（{ap['status']}），幂等返回不重复创建。",
+                }
+                return self._record(
+                    "mock_tradein.request_uplift",
+                    {"assessment_id": assessment_id, "requested_offer": requested_offer, "reason": reason},
+                    result,
+                )
+        if uplift <= authorized_max:
+            result = {
+                "status": "applied",
+                "action": "request_uplift",
+                "assessment_id": assessment_id,
+                "requested_offer": requested_offer,
+                "uplift": uplift,
+                "authorized_uplift_max": authorized_max,
+                "risk_level": "L1",
+                "message": "估值上浮在授权范围内，已自动应用（L1 可逆）。",
+            }
+            self._action("trade_in_uplift_applied", "L1",
+                         {"assessment_id": assessment_id, "uplift": uplift, "requested_offer": requested_offer})
+        else:
+            approval_id = f"APR-{uuid.uuid4().hex[:6].upper()}"
+            self.approvals[approval_id] = {
+                "approval_id": approval_id,
+                "type": "trade_in_valuation_override",
+                "assessment_id": assessment_id,
+                "requested_offer": requested_offer,
+                "standard_offer": standard,
+                "uplift": uplift,
+                "authorized_uplift_max": authorized_max,
+                "reason": reason,
+                "status": "pending",
+            }
+            result = {
+                "status": "needs_approval",
+                "action": "request_uplift",
+                "assessment_id": assessment_id,
+                "requested_offer": requested_offer,
+                "standard_offer": standard,
+                "uplift": uplift,
+                "authorized_uplift_max": authorized_max,
+                "risk_level": "L2",
+                "approval_id": approval_id,
+                "message": "置换估值上浮超出门店授权区间，已生成 L2 审批任务；估值审批通过前不得锁定订单。",
+            }
+            self._action("trade_in_valuation_override", "L2",
+                         {"assessment_id": assessment_id, "uplift": uplift, "requested_offer": requested_offer,
+                          "approval_id": approval_id})
+        return self._record(
+            "mock_tradein.request_uplift",
+            {"assessment_id": assessment_id, "requested_offer": requested_offer, "reason": reason},
+            result,
+        )
 
     # ---- mock_finance ----
     def calc_plan(self, price: float, down_payment: float, months: int) -> Dict[str, Any]:
@@ -894,6 +1027,59 @@ class LocalMockTools(BaseMockTools):
         return self._record(
             "mock_wechat.send_template_message",
             {"customer_id": customer_id, "template": template, "params": params},
+            result,
+        )
+
+    # ---- mock_sms（官方用云 Skill：阿里云短信审批告警）----
+    def send_approval_alert(self, approval_id: str, deal_id: str = "", risk_type: str = "",
+                            summary: str = "", approver: str = "store_manager") -> Dict[str, Any]:
+        """L2 审批门禁触发 needs_approval 时，短信通知人工审批者（阿里云短信官方用云 Skill）。
+
+        幂等：以 approval_id 作为 alert_key，同一审批单只发送一次审批告警（防重发骚扰审批人）；
+        重复调用返回 already_sent + 首次发送结果，不二次外呼。发送失败交由网关
+        SkillFailureHandler 分类降级（可重试错误重试一次，耗尽后降级+告警，不阻塞审批主链）。
+        """
+        sent = self.sms_alerts.get(approval_id)
+        if sent:
+            result = {
+                **sent,
+                "status": "already_sent",
+                "deduplicated": True,
+                "message": f"审批 {approval_id} 告警已发送过（alert_key 幂等去重），不重发。",
+            }
+            return self._record(
+                "mock_sms.send_approval_alert",
+                {"approval_id": approval_id, "approver": approver, "alert_key": approval_id},
+                result,
+            )
+        sent_payload = SMS_ALERT_SKILL.send_approval_alert(
+            self.scenario_id, self.trace_id, approval_id,
+            deal_id=deal_id, risk_type=risk_type, summary=summary, approver=approver,
+        )
+        result = {
+            "status": "sent",
+            "skill": "sms-approval-alert",
+            "approval_id": approval_id,
+            "deal_id": deal_id,
+            "risk_type": risk_type,
+            "alert_key": approval_id,
+            "approver": approver,
+            "channel_type": sent_payload["channel_type"],
+            "backend": sent_payload["backend"],
+            "biz_id": sent_payload.get("biz_id"),
+            "risk_level": "L1",
+            "summary_truncated": sent_payload.get("summary_truncated", False),
+            "message": sent_payload["message"],
+        }
+        self.sms_alerts[approval_id] = result
+        self._action("send_approval_alert", "L1",
+                     {"approval_id": approval_id, "deal_id": deal_id, "risk_type": risk_type,
+                      "approver": approver, "channel_type": sent_payload["channel_type"],
+                      "biz_id": sent_payload.get("biz_id")})
+        return self._record(
+            "mock_sms.send_approval_alert",
+            {"approval_id": approval_id, "deal_id": deal_id, "risk_type": risk_type,
+             "summary": summary, "approver": approver},
             result,
         )
 

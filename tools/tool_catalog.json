@@ -22,6 +22,12 @@
       "future_mcp_mapping": ["pricing.policy.query", "pricing.quote.calc", "pricing.discount.apply"]
     },
     {
+      "name": "mock_tradein",
+      "kind": "http-mock-adapter",
+      "functions": ["assess_vehicle", "request_uplift"],
+      "future_mcp_mapping": ["tradein.vehicle.assess", "tradein.valuation.uplift"]
+    },
+    {
       "name": "mock_finance",
       "kind": "http-mock-adapter",
       "functions": ["calc_plan", "submit_approval", "check_approval", "approve", "reject"],
@@ -50,6 +56,12 @@
       "kind": "http-mock-adapter",
       "functions": ["get_session", "send_template_message"],
       "future_mcp_mapping": ["wechat.session.query", "wechat.template_message.send"]
+    },
+    {
+      "name": "mock_sms",
+      "kind": "http-mock-adapter",
+      "functions": ["send_approval_alert"],
+      "future_mcp_mapping": ["sms.approval.alert"]
     },
     {
       "name": "mock_verify",
